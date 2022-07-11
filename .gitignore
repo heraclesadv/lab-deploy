@@ -12,6 +12,9 @@ ESXi/Packer/variables.json
 variables.json
 ESXi/ansible/outputpwd.txt
 ESXi/ansible/inventory.yml
+ESXi/ansible/var.py
+ESXi/ansible/__pycache__/*
 ESXi/variables.tf
 ESXi/ansible/env.sh
 manifest.xml
+ESXi/rebuild.log
