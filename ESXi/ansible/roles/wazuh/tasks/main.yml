@@ -1,0 +1,28 @@
+- name: Download Wazuh Agent Installer
+  win_shell: "Invoke-WebRequest -Uri https://packages.wazuh.com/4.x/windows/wazuh-agent-4.3.4-1.msi -OutFile wazuh-agent.msi"
+  failed_when: "'Exception' in utilities.stdout"
+  ignore_errors: true
+
+- name: Install Wazuh Agent
+  win_shell: ".\\wazuh-agent.msi /q WAZUH_MANAGER='192.168.56.105' WAZUH_REGISTRATION_SERVER='192.168.56.105' WAZUH_AGENT_GROUP='default'"
+  register: output
+  failed_when: "'Exception' in utilities.stdout"
+  ignore_errors: true
+
+- debug: msg="{{ output.stdout }}"
+- debug: msg="{{ output.stderr }}"
+
+- name: Wait a little for test
+  win_wait_for:
+    timeout: 3
+
+- name: Run Wazuh Agent
+  win_shell: "NET START WazuhSvc"
+  register: outputR
+  failed_when: "'invalid' in utilities.stdout"
+  ignore_errors: true
+  
+- debug: msg="{{ outputR.stdout }}"
+- debug: msg="{{ outputR.stderr }}"
+
+

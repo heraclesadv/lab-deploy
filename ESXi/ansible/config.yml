@@ -1,0 +1,10 @@
+nodes:
+  indexer:
+    - name: logger
+      ip: 192.168.56.105
+  server:
+    - name: logger
+      ip: 192.168.56.105
+  dashboard:
+    - name: logger
+      ip: 192.168.56.105

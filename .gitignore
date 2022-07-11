@@ -1,0 +1,17 @@
+Vagrant/.vagrant/*
+Vagrant/vagrant*.log
+Packer/packer_cache/*
+Packer/packer_build.log
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+*.tfvars
+logger_variables.sh
+ESXi/Packer/variables.json
+.terraform.lock.hcl
+variables.json
+ESXi/ansible/outputpwd.txt
+ESXi/ansible/inventory.yml
+ESXi/variables.tf
+ESXi/ansible/env.sh
+manifest.xml

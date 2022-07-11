@@ -1,0 +1,21 @@
+---
+- hosts: logger
+  roles:
+    - logger
+  tags: logger
+
+- hosts: dc
+  roles:
+    - dc
+    - common
+    - wazuh
+  tags: dc
+
+- hosts: win10
+  roles:
+    - win10
+    - common
+    - wazuh
+  tags: win10
+
+
