@@ -84,7 +84,8 @@ echo "Installing Cybereason Agent..."
 sshpass -p "vagrant" sshpass -p "vagrant" ssh -o StrictHostKeyChecking=no vagrant@${LOGGER} 'sudo apt install gdb -y'
 sshpass -p "vagrant" sshpass -p "vagrant" ssh -o StrictHostKeyChecking=no vagrant@${LOGGER} 'sudo dpkg -i CybereasonLinux.deb'
 
-echo "Installing Cybereason agent on Win 10 and DC with python script.."
+echo "Installing Cybereason agent on Win 10 and DC with python script..."
+#On peut avoir besoin d'installer pywinrm en root
 python3 winrm_script.py
 
 echo "Disconnecting VMs from management network..."

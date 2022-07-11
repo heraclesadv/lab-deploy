@@ -64,8 +64,6 @@
 
 - debug: msg="{{ ou_creation.stdout_lines }}"
 
-- debug: msg="{{ wef_gpo.stdout_lines }}"
-
 - name: Configure Powershell Logging GPO
   win_shell: .\\configure-powershelllogging.ps1
   args:
