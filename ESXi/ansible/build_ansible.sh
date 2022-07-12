@@ -4,18 +4,22 @@ echo "Getting IPs from ESXi host..."
 . env.sh 
 
 winId=$(sshpass -p "${PSW}" ssh -o StrictHostKeyChecking=no ${USR}@${IP} "vim-cmd vmsvc/getallvms" | grep "win10/win10.vmx" | cut -c1-3 | awk '{$1=$1};1')
+winbId=$(sshpass -p "${PSW}" ssh -o StrictHostKeyChecking=no ${USR}@${IP} "vim-cmd vmsvc/getallvms" | grep "win10b/win10b.vmx" | cut -c1-3 | awk '{$1=$1};1')
 dcId=$(sshpass -p "${PSW}" ssh -o StrictHostKeyChecking=no ${USR}@${IP} "vim-cmd vmsvc/getallvms" | grep "dc/dc.vmx" | cut -c1-3 | awk '{$1=$1};1')
 loggerId=$(sshpass -p "${PSW}" ssh -o StrictHostKeyChecking=no ${USR}@${IP} "vim-cmd vmsvc/getallvms" | grep "logger/logger.vmx" | cut -c1-3 | awk '{$1=$1};1')
 
 echo "Logger VM id: ${loggerId}"
 echo "DC VM id: ${dcId}"
 echo "Win10 VM id: ${winId}"
+echo "Win10b VM id: ${winbId}"
 
 WIN10=$(sshpass -p "${PSW}" ssh -o StrictHostKeyChecking=no ${USR}@${IP} "vim-cmd vmsvc/get.guest ${winId} | grep -m 1 '192.168.1.' | sed 's/[^0-9+.]*//g'")
 DC=$(sshpass -p "${PSW}" ssh -o StrictHostKeyChecking=no ${USR}@${IP} "vim-cmd vmsvc/get.guest ${dcId} | grep -m 1 '192.168.1.' | sed 's/[^0-9+.]*//g'")
 LOGGER=$(sshpass -p "${PSW}" ssh -o StrictHostKeyChecking=no ${USR}@${IP} "vim-cmd vmsvc/get.guest ${loggerId} | grep -m 1 '192.168.1.' | sed 's/[^0-9+.]*//g'")
+WIN10B=$(sshpass -p "${PSW}" ssh -o StrictHostKeyChecking=no ${USR}@${IP} "vim-cmd vmsvc/get.guest ${winbId} | grep -m 1 '192.168.1.' | sed 's/[^0-9+.]*//g'")
 
 echo "Found ${WIN10} as win10 IP"
+echo "Found ${WIN10B} as win10B IP"
 echo "Found ${DC} as DC IP"
 echo "Found ${LOGGER} as LOGGER IP"
 echo "Done !"
@@ -26,6 +30,7 @@ rm var.py
 echo "
 #Do not touch, file generated to give IPs to winrm script
 WIN_IP = '${WIN10}'
+WINB_IP = '${WIN10B}'
 DC_IP = '${DC}'" > var.py
 
 ###
@@ -48,7 +53,11 @@ dc:
 
 win10:
   hosts:
-    ${WIN10}:" > inventory.yml
+    ${WIN10}:
+    
+win10b:
+  hosts:
+    ${WIN10B}:" > inventory.yml
 
 
 #peut être pb si root:
@@ -77,6 +86,7 @@ echo "Wazuh installation over, configuring windows pcs with ansible..."
 
 ansible-playbook detectionlab.yml --tags "dc" 
 ansible-playbook detectionlab.yml --tags "win10"
+ansible-playbook detectionlab.yml --tags "win10b"
 
 echo "Getting Cybereason Ubuntu installer from master (apache server)..."
 sshpass -p "vagrant" ssh -o StrictHostKeyChecking=no vagrant@${LOGGER} 'wget "http://192.168.1.52/CybereasonLinux.deb"'
@@ -91,6 +101,7 @@ python3 winrm_script.py
 echo "Disconnecting VMs from management network..."
 
 sshpass -p "${PSW}" ssh -o StrictHostKeyChecking=no ${USR}@${IP} "vim-cmd vmsvc/device.connection ${winId} 4000 0"
+sshpass -p "${PSW}" ssh -o StrictHostKeyChecking=no ${USR}@${IP} "vim-cmd vmsvc/device.connection ${winbId} 4000 0"
 sshpass -p "${PSW}" ssh -o StrictHostKeyChecking=no ${USR}@${IP} "vim-cmd vmsvc/device.connection ${loggerId} 4000 0"
 sshpass -p "${PSW}" ssh -o StrictHostKeyChecking=no ${USR}@${IP} "vim-cmd vmsvc/device.connection ${dcId} 4000 0"
 echo "Done"

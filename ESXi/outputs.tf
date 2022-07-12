@@ -21,3 +21,11 @@ output "win10_interfaces" {
 output "win10_ips" {
   value = esxi_guest.win10.ip_address
 }
+
+output "win10b_interfaces" {
+  value = esxi_guest.win10.network_interfaces
+}
+
+output "win10b_ips" {
+  value = esxi_guest.win10.ip_address
+}

@@ -18,4 +18,11 @@
     - wazuh
   tags: win10
 
+- hosts: win10b
+  roles:
+    - win10b
+    - common
+    - wazuh
+  tags: win10b
+
 

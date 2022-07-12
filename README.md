@@ -14,3 +14,5 @@ ESXi/ansible/env.sh
 cd ESXi
 
 sudo bash rebuild.sh
+
+To add a computer you can use as example the commit "Added win10b"
