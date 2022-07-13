@@ -82,11 +82,12 @@ sshpass -p "vagrant" sshpass -p "vagrant" ssh -o StrictHostKeyChecking=no vagran
 sshpass -p "vagrant" sshpass -p "vagrant" ssh -o StrictHostKeyChecking=no vagrant@${LOGGER} 'cd wazuh && sudo bash wazuh-install.sh --wazuh-dashboard logger' | tee outputpwd.txt
 sshpass -p "vagrant" scp -o StrictHostKeyChecking=no outputpwd.txt vagrant@${LOGGER}:~/wazuh/
 
-echo "Wazuh installation over, configuring windows pcs with ansible..."
+echo "Wazuh installation over, configuring windows pcs with ansible... (3 parallel tasks)"
 
-ansible-playbook detectionlab.yml --tags "dc" 
-ansible-playbook detectionlab.yml --tags "win10"
-ansible-playbook detectionlab.yml --tags "win10b"
+ansible-playbook detectionlab.yml --tags "dc" &
+ansible-playbook detectionlab.yml --tags "win10" &
+ansible-playbook detectionlab.yml --tags "win10b" &
+wait
 
 echo "Getting Cybereason Ubuntu installer from master (apache server)..."
 sshpass -p "vagrant" ssh -o StrictHostKeyChecking=no vagrant@${LOGGER} 'wget "http://192.168.1.52/CybereasonLinux.deb"'
