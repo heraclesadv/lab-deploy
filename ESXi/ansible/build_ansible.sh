@@ -84,7 +84,7 @@ sshpass -p "vagrant" scp -o StrictHostKeyChecking=no outputpwd.txt vagrant@${LOG
 
 echo "Wazuh installation over, configuring windows pcs with ansible... (3 parallel tasks)"
 
-ansible-playbook detectionlab.yml --tags "dc" &
+ansible-playbook detectionlab.yml --tags "dc" 
 ansible-playbook detectionlab.yml --tags "win10" &
 ansible-playbook detectionlab.yml --tags "win10b" &
 wait

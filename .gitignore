@@ -18,3 +18,4 @@ ESXi/variables.tf
 ESXi/ansible/env.sh
 manifest.xml
 ESXi/rebuild.log
+ESXi/ansible/log.log
