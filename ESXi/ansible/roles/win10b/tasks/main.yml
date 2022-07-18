@@ -78,7 +78,5 @@
     reboot_timeout: 600
     post_reboot_delay: 60
 
-- name: Clear Event Logs
-  win_shell: "wevtutil el | Select-String -notmatch \"Microsoft-Windows-LiveId\" | Foreach-Object {wevtutil cl \"$_\"}"
 
 

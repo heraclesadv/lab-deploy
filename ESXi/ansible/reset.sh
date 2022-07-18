@@ -21,11 +21,11 @@ sshpass -p "${PSW}" ssh -o StrictHostKeyChecking=no ${USR}@${IP} "vim-cmd vmsvc/
 
 echo "Machines reverted, starting them..."
 
-wait 5
+sleep 5
 
 sshpass -p "${PSW}" ssh -o StrictHostKeyChecking=no ${USR}@${IP} "vim-cmd vmsvc/power.on ${loggerId}"
 sshpass -p "${PSW}" ssh -o StrictHostKeyChecking=no ${USR}@${IP} "vim-cmd vmsvc/power.on ${dcId}"
-wait 15
+sleep 15
 sshpass -p "${PSW}" ssh -o StrictHostKeyChecking=no ${USR}@${IP} "vim-cmd vmsvc/power.on ${winId}"
 sshpass -p "${PSW}" ssh -o StrictHostKeyChecking=no ${USR}@${IP} "vim-cmd vmsvc/power.on ${winbId}"
 #puis il faut démarrer les machines dans le bon ordre
