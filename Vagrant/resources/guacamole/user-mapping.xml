@@ -8,6 +8,33 @@
             <param name="password">vagrant</param>
         </connection>
 
+        <connection name="WIN10C">
+            <protocol>rdp</protocol>
+            <param name="hostname">192.168.56.107</param>
+            <param name="port">3389</param>
+            <param name="username">vagrant</param>
+            <param name="password">vagrant</param>
+            <param name="create-drive-path">true</param>
+            <param name="enable-drive">true</param>
+            <param name="drive-path">/etc/guacamole/shares/win10c</param>
+            <param name="security">nla</param>
+            <param name="ignore-cert">true</param>
+        </connection>
+
+        <connection name="WIN10C - Domain User">
+            <protocol>rdp</protocol>
+            <param name="hostname">192.168.56.107</param>
+            <param name="port">3389</param>
+            <param name="username">vagrant</param>
+            <param name="password">vagrant</param>
+            <param name="domain">windomain</param>
+            <param name="create-drive-path">true</param>
+            <param name="enable-drive">true</param>
+            <param name="drive-path">/etc/guacamole/shares/win10c</param>
+            <param name="security">nla</param>
+            <param name="ignore-cert">true</param>
+        </connection>
+
         <connection name="WIN10B">
             <protocol>rdp</protocol>
             <param name="hostname">192.168.56.106</param>

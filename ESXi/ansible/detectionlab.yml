@@ -28,4 +28,12 @@
     - cybereasonWin
   tags: win10b
 
+- hosts: win10c
+  roles:
+    - win10c
+    - common
+    - wazuh
+    - cybereasonWin
+  tags: win10c
+
 

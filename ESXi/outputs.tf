@@ -23,9 +23,17 @@ output "win10_ips" {
 }
 
 output "win10b_interfaces" {
-  value = esxi_guest.win10.network_interfaces
+  value = esxi_guest.win10b.network_interfaces
 }
 
 output "win10b_ips" {
-  value = esxi_guest.win10.ip_address
+  value = esxi_guest.win10b.ip_address
+}
+
+output "win10c_interfaces" {
+  value = esxi_guest.win10c.network_interfaces
+}
+
+output "win10c_ips" {
+  value = esxi_guest.win10c.ip_address
 }
