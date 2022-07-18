@@ -9,6 +9,7 @@
     - dc
     - common
     - wazuh
+    - cybereasonWin
   tags: dc
 
 - hosts: win10
@@ -16,6 +17,7 @@
     - win10
     - common
     - wazuh
+    - cybereasonWin
   tags: win10
 
 - hosts: win10b
@@ -23,6 +25,7 @@
     - win10b
     - common
     - wazuh
+    - cybereasonWin
   tags: win10b
 
 

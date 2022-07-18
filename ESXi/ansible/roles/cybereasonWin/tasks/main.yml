@@ -1,0 +1,14 @@
+- name: Download Cybereason installer from master
+  win_shell: "Invoke-WebRequest -Uri http://192.168.1.52/CybereasonWindows.exe -OutFile CybereasonWindows.exe"
+  failed_when: "'Exception' in utilities.stdout"
+  ignore_errors: true
+
+- name: Install Cybereason Agent
+  win_shell: ".\\CybereasonWindows.exe /install /quiet /norestart "
+  register: output
+  failed_when: "'Exception' in utilities.stdout"
+  ignore_errors: true
+
+- debug: msg="{{ output.stdout }}"
+- debug: msg="{{ output.stderr }}"
+

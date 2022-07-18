@@ -85,19 +85,14 @@ sshpass -p "vagrant" scp -o StrictHostKeyChecking=no outputpwd.txt vagrant@${LOG
 echo "Wazuh installation over, configuring windows pcs with ansible... (3 parallel tasks)"
 
 ansible-playbook detectionlab.yml --tags "dc" 
-ansible-playbook detectionlab.yml --tags "win10" &
-ansible-playbook detectionlab.yml --tags "win10b" &
-wait
+ansible-playbook detectionlab.yml --tags "win10" 
+ansible-playbook detectionlab.yml --tags "win10b" 
 
 echo "Getting Cybereason Ubuntu installer from master (apache server)..."
 sshpass -p "vagrant" ssh -o StrictHostKeyChecking=no vagrant@${LOGGER} 'wget "http://192.168.1.52/CybereasonLinux.deb"'
 echo "Installing Cybereason Agent..."
 sshpass -p "vagrant" sshpass -p "vagrant" ssh -o StrictHostKeyChecking=no vagrant@${LOGGER} 'sudo apt install gdb -y'
 sshpass -p "vagrant" sshpass -p "vagrant" ssh -o StrictHostKeyChecking=no vagrant@${LOGGER} 'sudo dpkg -i CybereasonLinux.deb'
-
-echo "Installing Cybereason agent on Win 10 and DC with python script..."
-#On peut avoir besoin d'installer pywinrm en root
-python3 winrm_script.py
 
 echo "Disconnecting VMs from management network..."
 
