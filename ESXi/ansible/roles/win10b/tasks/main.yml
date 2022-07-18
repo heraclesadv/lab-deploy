@@ -16,13 +16,12 @@
   win_shell: "$adapter = (get-netadapter | where {$_.MacAddress -eq '00-50-56-A2-B1-C5'}).Name; Set-DnsClientServerAddress -InterfaceAlias $adapter -ServerAddresses 192.168.56.102,8.8.8.8"
 
 - name: Download git installer from master
-  become: yes
-  get_url:
-    url: http://192.168.1.52/installGit.ps1
-    dest: 'C:\installGit.ps1'
+  win_get_url:
+    url: http://192.168.1.52/gitWin64.exe
+    dest: 'C:\gitWin64.exe'
 
 - name: Install git
-  win_shell: powershell -ep Bypass .\installGit.ps1
+  win_shell: .\gitWin64.exe /SILENT 
   args:
     chdir: 'c:\'
   register: git
