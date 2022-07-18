@@ -40,8 +40,6 @@
   register: cloning
   when: not dir.stat.exists
 
-- debug: msg="{{ cloning.stdout }}"
-
 - name: Copy scripts to c:\vagrant
   win_shell: Copy-Item -Recurse c:\DetectionLab\Vagrant c:\vagrant
 
@@ -50,10 +48,23 @@
   args:
     chdir: 'c:\vagrant\scripts'
 
+- name: Remove old join-domain script
+  win_shell: rm join-domain.ps1
+  args:
+    chdir: 'c:\vagrant\scripts\'
+
+- name: Download join-domain script
+  win_get_url:
+    url: http://192.168.1.52/join-domain.ps1
+    dest: 'C:\vagrant\scripts\join-domain.ps1'
+
 - name: Join the Domain
   win_shell: .\\provision.ps1
   args:
     chdir: 'c:\vagrant\scripts'
+  register: join
+
+- debug: msg="{{ join.stdout }}"
 
 - name: Update group policy
   win_shell: "gpupdate /force"
