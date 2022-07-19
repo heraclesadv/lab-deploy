@@ -40,10 +40,9 @@
   register: cloning
   when: not dir.stat.exists
 
-- debug: msg="{{ cloning.stdout }}"
-
 - name: Copy scripts to c:\vagrant
   win_shell: Copy-Item -Recurse c:\DetectionLab\Vagrant c:\vagrant
+  ignore_errors: true
 
 - name: Making Windows10 Great Again
   win_shell:  .\\MakeWindows10GreatAgain.ps1
@@ -70,6 +69,7 @@
 
 - name: Update group policy
   win_shell: "gpupdate /force"
+  ignore_errors: true
 
 - name: Reboot Server
   win_reboot:

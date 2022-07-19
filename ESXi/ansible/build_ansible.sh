@@ -89,10 +89,10 @@ sshpass -p "vagrant" scp -o StrictHostKeyChecking=no outputpwd.txt vagrant@${LOG
 
 echo "Wazuh installation over, configuring windows pcs with ansible... "
 
-ansible-playbook detectionlab.yml --tags "dc" 
-ansible-playbook detectionlab.yml --tags "win10" 
-ansible-playbook detectionlab.yml --tags "win10b" 
-ansible-playbook detectionlab.yml --tags "win10c" 
+ansible-playbook detectionlab.yml --tags "dc" --timeout 30
+ansible-playbook detectionlab.yml --tags "win10" --timeout 30
+ansible-playbook detectionlab.yml --tags "win10b" --timeout 30
+ansible-playbook detectionlab.yml --tags "win10c" --timeout 30
 
 echo "Getting Cybereason Ubuntu installer from master (apache server)..."
 sshpass -p "vagrant" ssh -o StrictHostKeyChecking=no vagrant@${LOGGER} 'wget "http://192.168.1.52/CybereasonLinux.deb"'
