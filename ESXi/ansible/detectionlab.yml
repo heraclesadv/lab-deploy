@@ -15,6 +15,7 @@
 
 - hosts: win10
   roles:
+    - commonWinEndpoint
     - win10
     - common
     - cybereasonWin
@@ -22,6 +23,7 @@
 
 - hosts: win10b
   roles:
+    - commonWinEndpoint
     - win10b
     - common
     - cybereasonWin
@@ -29,6 +31,7 @@
 
 - hosts: win10c
   roles:
+    - commonWinEndpoint
     - win10c
     - common
     - harfangWin
