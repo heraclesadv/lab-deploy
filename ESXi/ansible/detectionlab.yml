@@ -15,24 +15,24 @@
 
 - hosts: win10
   roles:
-    - commonWinEndpoint
     - win10
+    - commonWinEndpoint
     - common
     - cybereasonWin
   tags: win10
 
 - hosts: win10b
   roles:
-    - commonWinEndpoint
     - win10b
+    - commonWinEndpoint
     - common
     - cybereasonWin
   tags: win10b
 
 - hosts: win10c
   roles:
-    - commonWinEndpoint
     - win10c
+    - commonWinEndpoint
     - common
     - harfangWin
   tags: win10c
