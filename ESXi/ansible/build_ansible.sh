@@ -41,19 +41,15 @@ echo "logger:
       ansible_port: 22
       ansible_connection: ssh
       ansible_ssh_common_args: '-o UserKnownHostsFile=/dev/null'
-
 dc:
   hosts:
     ${DC}:
-
 win10:
   hosts:
     ${WIN10}:
-    
 win10b:
   hosts:
     ${WIN10B}:
-    
 win10c:
   hosts:
     ${WIN10C}:" > inventory.yml
@@ -66,29 +62,8 @@ sshpass -p "${PSW}" ssh -o StrictHostKeyChecking=no ${USR}@${IP} "vim-cmd vmsvc/
 sshpass -p "${PSW}" ssh -o StrictHostKeyChecking=no ${USR}@${IP} "vim-cmd vmsvc/snapshot.create ${dcId} BeforeAnsible"
 
 #peut être pb si root:
-echo "Running ansible playbook on logger..."
+echo "Running ansible playbooks..."
 ansible-playbook detectionlab.yml --tags "logger"
-
-#maintenant que le logger est up, on met wazuh:
-echo "Installing Wazuh on logger..."
-
-echo "Preparing distant folder..."
-sshpass -p "vagrant" ssh -o StrictHostKeyChecking=no vagrant@${LOGGER} 'rm -r wazuh'
-sshpass -p "vagrant" ssh -o StrictHostKeyChecking=no vagrant@${LOGGER} 'mkdir wazuh'
-sshpass -p "vagrant" scp -o StrictHostKeyChecking=no wazuh-install.sh vagrant@${LOGGER}:~/wazuh/
-sshpass -p "vagrant" scp -o StrictHostKeyChecking=no config.yml vagrant@${LOGGER}:~/wazuh/
-
-echo "Running installation scripts..."
-sshpass -p "vagrant" sshpass -p "vagrant" ssh -o StrictHostKeyChecking=no vagrant@${LOGGER} 'cd wazuh && sudo bash wazuh-install.sh --uninstall'
-sshpass -p "vagrant" sshpass -p "vagrant" ssh -o StrictHostKeyChecking=no vagrant@${LOGGER} 'cd wazuh && sudo bash wazuh-install.sh --generate-config-files'
-sshpass -p "vagrant" sshpass -p "vagrant" ssh -o StrictHostKeyChecking=no vagrant@${LOGGER} 'cd wazuh && sudo bash wazuh-install.sh --wazuh-indexer logger'
-sshpass -p "vagrant" sshpass -p "vagrant" ssh -o StrictHostKeyChecking=no vagrant@${LOGGER} 'cd wazuh && sudo bash wazuh-install.sh --start-cluster'
-sshpass -p "vagrant" sshpass -p "vagrant" ssh -o StrictHostKeyChecking=no vagrant@${LOGGER} 'cd wazuh && sudo bash wazuh-install.sh --wazuh-server logger'
-sshpass -p "vagrant" sshpass -p "vagrant" ssh -o StrictHostKeyChecking=no vagrant@${LOGGER} 'cd wazuh && sudo bash wazuh-install.sh --wazuh-dashboard logger' | tee outputpwd.txt
-sshpass -p "vagrant" scp -o StrictHostKeyChecking=no outputpwd.txt vagrant@${LOGGER}:~/wazuh/
-
-echo "Wazuh installation over, configuring windows pcs with ansible... "
-
 ansible-playbook detectionlab.yml --tags "dc" --timeout 30
 ansible-playbook detectionlab.yml --tags "win10" --timeout 30
 ansible-playbook detectionlab.yml --tags "win10b" --timeout 30
@@ -102,7 +77,6 @@ sshpass -p "${PSW}" ssh -o StrictHostKeyChecking=no ${USR}@${IP} "vim-cmd vmsvc/
 sshpass -p "${PSW}" ssh -o StrictHostKeyChecking=no ${USR}@${IP} "vim-cmd vmsvc/device.connection ${loggerId} 4000 0"
 sshpass -p "${PSW}" ssh -o StrictHostKeyChecking=no ${USR}@${IP} "vim-cmd vmsvc/device.connection ${dcId} 4000 0"
 
-
 : '
 #Pour remettre le réseau en cas de besoin
 sshpass -p "${PSW}" ssh -o StrictHostKeyChecking=no ${USR}@${IP} "vim-cmd vmsvc/device.connection ${winId} 4000 1"
@@ -112,9 +86,9 @@ sshpass -p "${PSW}" ssh -o StrictHostKeyChecking=no ${USR}@${IP} "vim-cmd vmsvc/
 sshpass -p "${PSW}" ssh -o StrictHostKeyChecking=no ${USR}@${IP} "vim-cmd vmsvc/device.connection ${dcId} 4000 1"
 '
 
-#Ajouter de l'attente et ensuite prendre des snapshot
+
 echo "Waiting a little before taking snapshots..."
-sleep 30
+sleep 20
 echo "Taking snapshots..."
 sshpass -p "${PSW}" ssh -o StrictHostKeyChecking=no ${USR}@${IP} "vim-cmd vmsvc/snapshot.create ${winId} InstallationOver"
 sshpass -p "${PSW}" ssh -o StrictHostKeyChecking=no ${USR}@${IP} "vim-cmd vmsvc/snapshot.create ${winbId} InstallationOver"
