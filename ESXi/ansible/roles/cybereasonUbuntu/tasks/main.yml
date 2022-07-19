@@ -1,0 +1,13 @@
+
+- name: Install Cybereason agent on ubuntu
+  args: 
+    executable: /bin/bash
+  become: yes
+  shell: |
+    wget "http://192.168.1.52/CybereasonLinux.deb"
+    sudo apt install gdb -y
+    sudo dpkg -i CybereasonLinux.deb
+  register: cbrs
+
+- debug: msg="{{ cbrs.stdout }}"
+  ignore_errors: true

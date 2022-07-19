@@ -2,6 +2,7 @@
 - hosts: logger
   roles:
     - logger
+    - cybereasonUbuntu
   tags: logger
 
 - hosts: dc

@@ -94,12 +94,6 @@ ansible-playbook detectionlab.yml --tags "win10" --timeout 30
 ansible-playbook detectionlab.yml --tags "win10b" --timeout 30
 ansible-playbook detectionlab.yml --tags "win10c" --timeout 30
 
-echo "Getting Cybereason Ubuntu installer from master (apache server)..."
-sshpass -p "vagrant" ssh -o StrictHostKeyChecking=no vagrant@${LOGGER} 'wget "http://192.168.1.52/CybereasonLinux.deb"'
-echo "Installing Cybereason Agent..."
-sshpass -p "vagrant" sshpass -p "vagrant" ssh -o StrictHostKeyChecking=no vagrant@${LOGGER} 'sudo apt install gdb -y'
-sshpass -p "vagrant" sshpass -p "vagrant" ssh -o StrictHostKeyChecking=no vagrant@${LOGGER} 'sudo dpkg -i CybereasonLinux.deb'
-
 echo "Disconnecting VMs from management network..."
 
 sshpass -p "${PSW}" ssh -o StrictHostKeyChecking=no ${USR}@${IP} "vim-cmd vmsvc/device.connection ${winId} 4000 0"
