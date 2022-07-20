@@ -9,7 +9,6 @@
   roles:
     - dc
     - common
-    - wazuh
     - cybereasonWin
   tags: dc
 

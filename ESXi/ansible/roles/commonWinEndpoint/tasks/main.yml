@@ -47,8 +47,10 @@
   args:
     chdir: 'c:\vagrant\scripts'
   register: join
+  ignore_errors: true
 
 - debug: msg="{{ join.stdout }}"
+  ignore_errors: true
 
 - name: Update group policy
   win_shell: "gpupdate /force"
