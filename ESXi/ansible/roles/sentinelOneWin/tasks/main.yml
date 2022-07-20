@@ -2,8 +2,9 @@
   win_shell: "Invoke-WebRequest -Uri http://192.168.1.52/SentinelOneWin.exe -OutFile sentinel.exe"
   ignore_errors: true
 
-- name: Install Harfang Agent
-  win_shell: "sentinel.exe --dont_fail_on_config_preserving_failures -t eyJ1cmwiOiAiaHR0cHM6Ly9hZHZlbnMuc2VudGluZWxvbmUubmV0IiwgInNpdGVfa2V5IjogIjg2ZjNhZDI1MDdkYTQxODQifQ=="
+#Ansible thinks the command fails, but it works
+- name: Install SentinelOne Agent
+  win_shell: ".\\sentinel.exe --dont_fail_on_config_preserving_failures -t eyJ1cmwiOiAiaHR0cHM6Ly9hZHZlbnMuc2VudGluZWxvbmUubmV0IiwgInNpdGVfa2V5IjogIjg2ZjNhZDI1MDdkYTQxODQifQ=="
   register: output
   ignore_errors: true
 
