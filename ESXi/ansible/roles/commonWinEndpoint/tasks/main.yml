@@ -41,6 +41,7 @@
   win_get_url:
     url: http://192.168.1.52/join-domain.ps1
     dest: 'C:\vagrant\scripts\join-domain.ps1'
+  ignore_errors: true
 
 - name: Join the Domain
   win_shell: .\\provision.ps1

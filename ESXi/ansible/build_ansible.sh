@@ -66,8 +66,8 @@ echo "Running ansible playbooks..."
 ansible-playbook detectionlab.yml --tags "logger"
 ansible-playbook detectionlab.yml --tags "dc" --timeout 30
 ansible-playbook detectionlab.yml --tags "win10" --timeout 30
-ansible-playbook detectionlab.yml --tags "win10b" --timeout 30
 ansible-playbook detectionlab.yml --tags "win10c" --timeout 30
+ansible-playbook detectionlab.yml --tags "win10b" --timeout 30
 
 echo "Disconnecting VMs from management network..."
 

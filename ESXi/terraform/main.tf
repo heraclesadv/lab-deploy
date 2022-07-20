@@ -136,13 +136,13 @@ resource "esxi_guest" "win10b" {
   # This is the network that bridges your host machine with the ESXi VM
   network_interfaces {
     virtual_network = var.vm_network
-    mac_address     = "00:50:56:a2:b1:c3"
+    mac_address     = "00:50:56:a5:b1:c3"
     nic_type        = "e1000"
   }
   # This is the local network that will be used for 192.168.56.x addressing
   network_interfaces {
     virtual_network = var.hostonly_network
-    mac_address     = "00:50:56:a2:b1:c5"
+    mac_address     = "00:50:56:a5:b1:c5"
     nic_type        = "e1000"
   }
   guest_startup_timeout  = 45
