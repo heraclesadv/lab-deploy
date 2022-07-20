@@ -25,7 +25,7 @@
     - win10b
     - commonWinEndpoint
     - common
-    - cybereasonWin
+    - sentinelOneWin
   tags: win10b
 
 - hosts: win10c
