@@ -1,10 +1,10 @@
 nodes:
   indexer:
     - name: logger
-      ip: 192.168.56.105
+      ip: <LoggerHostOnlyIP>
   server:
     - name: logger
-      ip: 192.168.56.105
+      ip: <LoggerHostOnlyIP>
   dashboard:
     - name: logger
-      ip: 192.168.56.105
+      ip: <LoggerHostOnlyIP>
