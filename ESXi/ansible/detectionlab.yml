@@ -2,38 +2,38 @@
 - hosts: logger
   roles:
     - logger
+    - cybereasonUbuntu
   tags: logger
 
 - hosts: dc
   roles:
     - dc
     - common
-    - wazuh
     - cybereasonWin
   tags: dc
 
 - hosts: win10
   roles:
     - win10
+    - commonWinEndpoint
     - common
-    - wazuh
     - cybereasonWin
   tags: win10
 
 - hosts: win10b
   roles:
     - win10b
+    - commonWinEndpoint
     - common
-    - wazuh
-    - cybereasonWin
+    - sentinelOneWin
   tags: win10b
 
 - hosts: win10c
   roles:
     - win10c
+    - commonWinEndpoint
     - common
-    - wazuh
-    - cybereasonWin
+    - harfangWin
   tags: win10c
 
 

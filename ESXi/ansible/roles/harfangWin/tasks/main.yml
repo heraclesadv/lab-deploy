@@ -1,0 +1,12 @@
+- name: Download Harfang installer from master
+  win_shell: "Invoke-WebRequest -Uri http://192.168.1.52/harfangWin.msi -OutFile harfang.msi"
+  ignore_errors: true
+
+- name: Install Harfang Agent
+  win_shell: "msiexec /qn /i harfang.msi HOST=639eb439a1003034.hurukai.io PORT=443 PROTO=https KEY=4510601d3db263c2a292c80e2205c78b9839030b29b4047fc5558b82b27a8f69"
+  register: output
+  ignore_errors: true
+
+- debug: msg="{{ output.stdout }}"
+- debug: msg="{{ output.stderr }}"
+

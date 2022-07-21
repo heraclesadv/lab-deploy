@@ -1,3 +1,5 @@
+#Was used for installing wazuh agent on windows endpoints, the wazuh server was the logger, worked pretty fine 
+# but wazuh raw installation isn't usable before quite a long configuration so wasn't useful 
 - name: Download Wazuh Agent Installer
   win_shell: "Invoke-WebRequest -Uri https://packages.wazuh.com/4.x/windows/wazuh-agent-4.3.4-1.msi -OutFile wazuh-agent.msi"
   failed_when: "'Exception' in utilities.stdout"
