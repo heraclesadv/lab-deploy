@@ -33,7 +33,7 @@ resource "esxi_guest" "<name>" {
 
   network_interfaces {
     virtual_network = var.hostonly_network
-    mac_address     = "<MACAddressLanPortGroup>"
+    mac_address     = "<MACAddressHostOnly>"
     nic_type        = "e1000"
   }
 

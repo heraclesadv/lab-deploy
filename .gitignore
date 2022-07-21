@@ -10,12 +10,9 @@ logger_variables.sh
 ESXi/Packer/variables.json
 .terraform.lock.hcl
 variables.json
-ESXi/ansible/outputpwd.txt
 ESXi/ansible/inventory.yml
-ESXi/ansible/var.py
-ESXi/ansible/__pycache__/*
-ESXi/terraform/variables.tf
 ESXi/ansible/env.sh
 manifest.xml
-ESXi/rebuild.log
+ESXi/env.py
+ESXi/Labs/*
 ESXi/ansible/log.log

@@ -19,7 +19,7 @@ resource "esxi_guest" "<name>" {
   # This is the local network that will be used for 192.168.56.x addressing
   network_interfaces {
     virtual_network = var.hostonly_network
-    mac_address     = "<MACAddressHostOnly"
+    mac_address     = "<MACAddressHostOnly>"
     nic_type        = "e1000"
   }
   guest_startup_timeout  = 45
