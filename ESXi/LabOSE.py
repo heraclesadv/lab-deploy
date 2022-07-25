@@ -2,7 +2,7 @@ import os
 import pickle
 import shutil
 import random
-import sys
+import time
 from env import *
 
 def generateMacAddress():
@@ -117,8 +117,24 @@ class network:
         self.ESXiCmd('vim-cmd vmsvc/devices.createnic '+str(pfVmId)+' "e1000" "'+lab.HostOnlyNetworkName+'"')
 
     def removeHostOnlyNetwork(self, lab:lab):
-        self.ESXiCmd('vim-cmd vmsvc/device.connection '+str(pfVmId)+' 4000 0')
+
+        # sans surprise l esxi est deco de master quand le pfsense est down, lancer un script
+        script = "vim-cmd vmsvc/power.shutdown "+str(pfVmId) + "\n"
+        script += "sleep 30 \n"
+        script += "a=$(cat "+pfPathToConfig+" | grep \""+lab.HostOnlyNetworkName+"\" | cut -c1-10 | sed 's/\.//') \n"
+        script += "grep -v \"${a}\" "+pfPathToConfig + " > "+pfPathToConfig +".new" + "\n"
+        script += "rm -f " + pfPathToConfig+ "\n"
+        script += "cp " + pfPathToConfig + ".new "+pfPathToConfig+ "\n"
+        script += "vim-cmd vmsvc/reload " + str(pfVmId) + "\n"
+        script += "vim-cmd vmsvc/power.on " + str(pfVmId) + "\n"
+        fichier = open("removeNIC.sh", 'w')
+        fichier.write(script)
+        fichier.close()
+        os.system("sshpass -p " + password + " scp -o StrictHostKeyChecking=no removeNIC.sh " + user + "@" + ESXi + ":/")
+        self.ESXiCmd("./removeNIC.sh &")
+        time.sleep(45)
         self.ESXiCmd('esxcli network vswitch standard portgroup remove --portgroup-name='+lab.HostOnlyNetworkName+' --vswitch-name=hostOnlySwitch')
+        print("Done")
         
     def disconnectVMfromLPG(self, lab:lab):
         pass

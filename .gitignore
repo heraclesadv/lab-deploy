@@ -16,3 +16,4 @@ manifest.xml
 ESXi/env.py
 ESXi/Labs/*
 ESXi/ansible/log.log
+ESXi/removeNIC.sh
