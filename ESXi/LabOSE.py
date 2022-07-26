@@ -40,6 +40,12 @@ class lab:
             lab=self))
         self.IPcounter += 1
 
+    def getDNSIP(self):
+        for ordi in self.computers:
+            if ordi.type == "dc":
+                return ordi.IP
+        return "8.8.8.8"
+
     def createTfFiles(self):
         test = os.listdir("Labs/" + self.name + '/')
         for item in test:
@@ -81,6 +87,42 @@ class lab:
         os.system("terraform apply -auto-approve")
         os.chdir("../..")
 
+    def getDHCPIPs(self):
+        for ordi in self.computers:
+            id = os.popen("sshpass -p " + password+ " ssh -o StrictHostKeyChecking=no " + user + "@" + ESXi + " " + "vim-cmd vmsvc/getallvms | grep \"" + ordi.name + "/" + ordi.name + ".vmx\" | cut -c1-3 | awk '{$1=$1};1'").read().replace("\n", "")
+            IP = os.popen("sshpass -p " + password+ " ssh -o StrictHostKeyChecking=no " + user + "@" + ESXi + " " + "vim-cmd vmsvc/get.guest "+id+" | grep -m 1 '"+self.network.IPmask+"' | sed 's/[^0-9+.]*//g'").read().replace("\n", "")
+            ordi.ESXiID = id
+            ordi.dhcpIP = IP 
+
+    def createAnsibleFiles(self):
+        os.system("rm ansible/inventory.yml")
+        fichier = open("ansible/inventory.yml", 'a')
+        self.getDHCPIPs()
+        for ordi in self.computers:
+            if ordi.type == "logger":
+                fichier.write(ordi.name + ":\n  hosts:\n    "+ordi.dhcpIP+":\n      ansible_user: vagrant\n      ansible_password: vagrant\n      ansible_port: 22\n      ansible_connection: ssh\n      ansible_ssh_common_args: '-o UserKnownHostsFile=/dev/null'\n\n")
+            else:
+                fichier.write(ordi.name + ":\n  hosts:\n    "+ordi.dhcpIP+":")
+        fichier.close()
+
+        os.system("rm ansible/detectionlab.yml")
+        fichier = open("ansible/detectionlab.yml", 'a')
+        fichier.write("---\n")
+        for ordi in self.computers:
+            fichier.write("- hosts: " + ordi.name)
+            fichier.write("\n  roles:\n")
+            ordi.buildAnsibleTasks(self.getDHCPIPs())
+            for role in ordi.roles:
+                fichier.write("    - "+ role + "\n")
+            fichier.write("  tags: " + ordi.name + "\n\n")
+        fichier.close()
+
+    def runAnsible(self):
+        pass 
+
+    def cleanAnsibleFiles():
+        pass
+
     def destroy(self):
         os.chdir("Labs/"+self.name+'/')
         os.system("terraform destroy -auto-approve")
@@ -99,11 +141,38 @@ class ordinateur:
         self.macAddressLanPortGroup = macAddressLanPortGroup
         self.IP = IP #host only ip
         self.lab = lab
+        self.ESXiID = 0
+        self.dhcpIP = ""
 
-    def buildRole(self, nom):
-        pass
+    def buildRole(self, dnsIP):
+        os.system("mkdir ansible/roles/" + self.name)
+        os.system("mkdir ansible/roles/"+self.name+"/tasks")
+        if self.type == "win":
+            importConfigFile("ansible/roles/samples/winSample.yml", "ansible/roles/"+self.name+"/tasks/main.yml", {
+                "name":self.name,
+                "HostOnlyIP": self.IP,
+                "DNSServer": dnsIP,
+                "MACAdressHostOnly": self.macAddressHostOnly
+            })
+        elif self.type == "dc":
+            importConfigFile("ansible/roles/samples/dcSample.yml", "ansible/roles/"+self.name+"/tasks/main.yml", {
+                "name":self.name,
+                "HostOnlyIP": self.IP,
+                "MACAdressHostOnly": self.macAddressHostOnly
+            })
+        elif self.type == "logger":
+            importConfigFile("ansible/roles/samples/loggerSample.yml", "ansible/roles/"+self.name+"/tasks/main.yml", {
+                "name":self.name,
+                "HostOnlyIP": self.IP,
+                "MACAdressHostOnly": self.macAddressHostOnly
+            })
+        else:
+            print("Type not found:" + self.type)
+            raise Exception
 
-    def buildAnsibleTasks(self):
+    def buildAnsibleTasks(self, dnsIP):
+        self.buildRole(dnsIP)
+        self.roles = [self.name]
         if self.type == "win":
             self.roles.append("commonWinEndpoint")
         elif self.type == "dc":
@@ -124,9 +193,6 @@ class network:
         self.name = ""
         self.IPmask = ""
         self.getHostOnlyNetwork()
-
-    def pfSenseCmd(self, command:str):
-        os.system("sshpass -p " + pfPwd + " ssh -o StrictHostKeyChecking=no " + pfUser + "@" + pfIP + " " + command)
     
     def ESXiCmd(self, command:str):
         print("sshpass -p " + password+ " ssh -o StrictHostKeyChecking=no " + user + "@" + ESXi + " " + command)
@@ -165,6 +231,7 @@ class network:
         raise Exception
 
 
+
 def main():
     
     name = input("Lab name: ").replace(" ", "")
@@ -186,12 +253,14 @@ def main():
     l.addComputer("dc", "harfang")
     l.addComputer("win", "cybereason")
     l.createTfFiles()
-    input()
     l.runTerraform()
     input()
+    l.createAnsibleFiles()
+
+
     l.destroy()
 
-main()
+#main()
 
 
 
