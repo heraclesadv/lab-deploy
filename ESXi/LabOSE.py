@@ -25,18 +25,18 @@ def importConfigFile(sampleFile:str, destFile:str, options:dict):
 
 
 class lab:
-    def __init__(self, name, id=2, HostOnlyNetworkName=""):
+    def __init__(self, name, id=2):
         self.name = name.replace(" ", "")
         self.id = id 
         self.status = "down"
         self.computers = []
-        self.HostOnlyNetworkName = HostOnlyNetworkName
+        self.network = network()
 
         self.IPcounter = 2
     
     def addComputer(self, type, edr):
         self.computers.append(ordinateur(type+str(self.IPcounter), type, edr=edr, macAddressHostOnly=generateMacAddress(),
-            macAddressLanPortGroup=generateMacAddress(), IP="192.168."+str(self.id)+"."+str(self.IPcounter),
+            macAddressLanPortGroup=generateMacAddress(), IP=self.network.IPmask+str(self.IPcounter),
             lab=self))
         self.IPcounter += 1
 
@@ -61,6 +61,32 @@ class lab:
             else:
                 print("Type not found for computer " + ordi.name)
                 raise Exception
+
+        importConfigFile("terraform/variableSample.tf", 
+            "Labs/" + self.name + "/variables.tf",
+            {"ESXiIP": ESXi, 
+            "ESXiUser":user, 
+            "ESXiPwd":password,
+            "ESXiDatastore":datastore,
+            "VMNetwork":VMNetwork,
+            "HostOnlyNetwork":self.network.name
+            })
+
+        shutil.copyfile("terraform/versions.tf", "Labs/" + self.name + "/versions.tf")
+        shutil.copytree("terraform/.terraform", "Labs/" + self.name + "/.terraform")
+
+    def runTerraform(self):
+        os.chdir("Labs/"+self.name+'/')
+        os.system("terraform init")
+        os.system("terraform apply -auto-approve")
+        os.chdir("../..")
+
+    def destroy(self):
+        os.chdir("Labs/"+self.name+'/')
+        os.system("terraform destroy -auto-approve")
+        os.chdir("../..")
+        self.network.freeHostOnlyNetwork()
+        shutil.rmtree("Labs/"+self.name)
 
     
 class ordinateur:
@@ -95,7 +121,9 @@ class ordinateur:
 
 class network:
     def __init__(self):
-        self.pfIP = "192.168.1.1"
+        self.name = ""
+        self.IPmask = ""
+        self.getHostOnlyNetwork()
 
     def pfSenseCmd(self, command:str):
         os.system("sshpass -p " + pfPwd + " ssh -o StrictHostKeyChecking=no " + pfUser + "@" + pfIP + " " + command)
@@ -103,52 +131,39 @@ class network:
     def ESXiCmd(self, command:str):
         print("sshpass -p " + password+ " ssh -o StrictHostKeyChecking=no " + user + "@" + ESXi + " " + command)
         os.system("sshpass -p " + password+ " ssh -o StrictHostKeyChecking=no " + user + "@" + ESXi + " " + command)
-
-    def removeHostOnlyNetwork(self, lab:lab):
-        pass
-
-    def addHostOnlyNetwork(self, lab:lab):
-        #Create the Host Only network for a given lab and plug the pfsense
-        #https://communities.vmware.com/t5/ESXi-Discussions/Supprimer-le-NIC-d-une-VM-en-ligne-de-commande/m-p/2919769#M282917
-        # si ça ne march epas on peut essayer de grep le bon network id à shutdown et garder la même technique
-        # ensuite on détruit le portgroup
-        # et on peut même essayer de reconfigurer la carte existante vers un autre réseau
-        self.ESXiCmd('esxcli network vswitch standard portgroup add --portgroup-name='+lab.HostOnlyNetworkName+' --vswitch-name=hostOnlySwitch')
-        self.ESXiCmd('vim-cmd vmsvc/devices.createnic '+str(pfVmId)+' "e1000" "'+lab.HostOnlyNetworkName+'"')
-
-    def removeHostOnlyNetwork(self, lab:lab):
-
-        # sans surprise l esxi est deco de master quand le pfsense est down, lancer un script
-        script = "vim-cmd vmsvc/power.shutdown "+str(pfVmId) + "\n"
-        script += "sleep 30 \n"
-        script += "a=$(cat "+pfPathToConfig+" | grep \""+lab.HostOnlyNetworkName+"\" | cut -c1-10 | sed 's/\.//') \n"
-        script += "grep -v \"${a}\" "+pfPathToConfig + " > "+pfPathToConfig +".new" + "\n"
-        script += "rm -f " + pfPathToConfig+ "\n"
-        script += "cp " + pfPathToConfig + ".new "+pfPathToConfig+ "\n"
-        script += "vim-cmd vmsvc/reload " + str(pfVmId) + "\n"
-        script += "vim-cmd vmsvc/power.on " + str(pfVmId) + "\n"
-        fichier = open("removeNIC.sh", 'w')
-        fichier.write(script)
+    
+    def getHostOnlyNetwork(self):
+        fichier = open("Networks.txt", 'r')
+        liste = fichier.readlines()
         fichier.close()
-        os.system("sshpass -p " + password + " scp -o StrictHostKeyChecking=no removeNIC.sh " + user + "@" + ESXi + ":/")
-        self.ESXiCmd("./removeNIC.sh &")
-        time.sleep(60)
-        self.ESXiCmd('esxcli network vswitch standard portgroup remove --portgroup-name='+lab.HostOnlyNetworkName+' --vswitch-name=hostOnlySwitch')
-        print("Done")
-        
-    def disconnectVMfromLPG(self, lab:lab):
-        pass
+        for i in range(len(liste)):
+            opts = liste[i].split(" ")
+            if opts[1] == "unused":
+                liste[i] = opts[0] + " used " + opts [2]
+                fichier = open("Networks.txt", 'w')
+                fichier.writelines(liste)
+                fichier.close()
+                self.name = opts[0]
+                self.IPmask = opts[2]
+                return 
+        print("No free HostOnly network, please create one more...")
+        raise Exception
 
-    def createTfVariableFile(self, lab:lab):
-        importConfigFile("terraform/variableSample.tf", 
-            "Labs/" + lab.name + "/variables.tf",
-            {"ESXiIP": ESXi, 
-            "ESXiUser":user, 
-            "ESXiPwd":password,
-            "ESXiDatastore":datastore,
-            "VMNetwork":VMNetwork,
-            "HostOnlyNetwork":lab.HostOnlyNetworkName
-            })
+    def freeHostOnlyNetwork(self):
+        fichier = open("Networks.txt", 'r')
+        liste = fichier.readlines()
+        fichier.close()
+        for i in range(len(liste)):
+            opts = liste[i].split(" ")
+            if opts[0] == self.name:
+                liste[i] = opts[0] + " unused " + opts[2]
+                fichier = open("Networks.txt", 'w')
+                fichier.writelines(liste)
+                fichier.close()
+                return 
+        print("Network to be freed not found !")
+        raise Exception
+
 
 def main():
     
@@ -165,25 +180,16 @@ def main():
             print("Aborting...")
             raise Exception
 
-    l = lab(name, id=2, HostOnlyNetworkName="HostOnly"+str(2))
-    n = network()
+    l = lab(name, id=2)
 
     l.addComputer("logger", "cybereason")
     l.addComputer("dc", "harfang")
     l.addComputer("win", "cybereason")
     l.createTfFiles()
-    n.addHostOnlyNetwork(l)
-    n.createTfVariableFile(l)
-
-    shutil.copyfile("terraform/versions.tf", "Labs/" + name + "/versions.tf")
-    shutil.copytree("terraform/.terraform", "Labs/" + name + "/.terraform")
-    os.chdir("Labs/"+name+'/')
-    os.system("terraform init")
-    os.system("terraform apply")
-    os.chdir("../..")
-
-    input("...")
-    n.removeHostOnlyNetwork(l)
+    input()
+    l.runTerraform()
+    input()
+    l.destroy()
 
 main()
 
