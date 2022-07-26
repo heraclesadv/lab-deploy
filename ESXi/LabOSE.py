@@ -132,7 +132,7 @@ class network:
         fichier.close()
         os.system("sshpass -p " + password + " scp -o StrictHostKeyChecking=no removeNIC.sh " + user + "@" + ESXi + ":/")
         self.ESXiCmd("./removeNIC.sh &")
-        time.sleep(45)
+        time.sleep(60)
         self.ESXiCmd('esxcli network vswitch standard portgroup remove --portgroup-name='+lab.HostOnlyNetworkName+' --vswitch-name=hostOnlySwitch')
         print("Done")
         
@@ -179,7 +179,7 @@ def main():
     shutil.copytree("terraform/.terraform", "Labs/" + name + "/.terraform")
     os.chdir("Labs/"+name+'/')
     os.system("terraform init")
-    #os.system("terraform apply")
+    os.system("terraform apply")
     os.chdir("../..")
 
     input("...")
