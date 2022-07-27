@@ -102,7 +102,7 @@ class lab:
             if ordi.type == "logger":
                 fichier.write(ordi.name + ":\n  hosts:\n    "+ordi.dhcpIP+":\n      ansible_user: vagrant\n      ansible_password: vagrant\n      ansible_port: 22\n      ansible_connection: ssh\n      ansible_ssh_common_args: '-o UserKnownHostsFile=/dev/null'\n\n")
                 os.system("rm resources/01-netcfg.yml")
-                importConfigFile("resources/01-netcfgSample.yml", "resources/01-netcfg.yml", {"loggerIP":ordi.IP})
+                importConfigFile("resources/01-netcfgSample.yaml", "resources/01-netcfg.yaml", {"loggerIP":ordi.IP})
             else:
                 fichier.write(ordi.name + ":\n  hosts:\n    "+ordi.dhcpIP+":\n\n")
         fichier.close()
@@ -268,11 +268,12 @@ def main():
     l.addComputer("win", "cybereason")
     l.createTfFiles()
     l.runTerraform()
+
     l.createAnsibleFiles()
+
     input()
     l.runAnsible()
     input()
-
     l.destroy()
 
 main()
