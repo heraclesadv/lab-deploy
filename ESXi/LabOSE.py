@@ -43,7 +43,7 @@ class lab:
     def getDNSIP(self):
         for ordi in self.computers:
             if ordi.type == "dc":
-                return ordi.IP
+                return ordi.IP.replace("\n", "")
         return "8.8.8.8"
 
     def createTfFiles(self):
@@ -90,7 +90,7 @@ class lab:
     def getDHCPIPs(self):
         for ordi in self.computers:
             id = os.popen("sshpass -p " + password+ " ssh -o StrictHostKeyChecking=no " + user + "@" + ESXi + " " + "vim-cmd vmsvc/getallvms | grep \"" + ordi.name + "/" + ordi.name + ".vmx\" | cut -c1-3 | awk '{$1=$1};1'").read().replace("\n", "")
-            IP = os.popen("sshpass -p " + password+ " ssh -o StrictHostKeyChecking=no " + user + "@" + ESXi + " " + "vim-cmd vmsvc/get.guest "+id+" | grep -m 1 '"+self.network.IPmask+"' | sed 's/[^0-9+.]*//g'").read().replace("\n", "")
+            IP = os.popen("sshpass -p " + password+ " ssh -o StrictHostKeyChecking=no " + user + "@" + ESXi + " " + "vim-cmd vmsvc/get.guest "+id+" | grep -m 1 '192.168.1.' | sed 's/[^0-9+.]*//g'").read().replace("\n", "")
             ordi.ESXiID = id
             ordi.dhcpIP = IP 
 
@@ -101,8 +101,10 @@ class lab:
         for ordi in self.computers:
             if ordi.type == "logger":
                 fichier.write(ordi.name + ":\n  hosts:\n    "+ordi.dhcpIP+":\n      ansible_user: vagrant\n      ansible_password: vagrant\n      ansible_port: 22\n      ansible_connection: ssh\n      ansible_ssh_common_args: '-o UserKnownHostsFile=/dev/null'\n\n")
+                os.system("rm resources/01-netcfg.yml")
+                importConfigFile("resources/01-netcfgSample.yml", "resources/01-netcfg.yml", {"loggerIP":ordi.IP})
             else:
-                fichier.write(ordi.name + ":\n  hosts:\n    "+ordi.dhcpIP+":")
+                fichier.write(ordi.name + ":\n  hosts:\n    "+ordi.dhcpIP+":\n\n")
         fichier.close()
 
         os.system("rm ansible/detectionlab.yml")
@@ -111,17 +113,27 @@ class lab:
         for ordi in self.computers:
             fichier.write("- hosts: " + ordi.name)
             fichier.write("\n  roles:\n")
-            ordi.buildAnsibleTasks(self.getDHCPIPs())
+            ordi.buildAnsibleTasks(self.getDNSIP())
             for role in ordi.roles:
                 fichier.write("    - "+ role + "\n")
             fichier.write("  tags: " + ordi.name + "\n\n")
         fichier.close()
+        
+
 
     def runAnsible(self):
-        pass 
+        for ordi in self.computers:
+            os.chdir("ansible")
+            os.system("ansible-playbook detectionlab.yml --tags \""+ordi.name+"\" --timeout 30")
+            os.chdir("..")
 
-    def cleanAnsibleFiles():
-        pass
+    def cleanAnsibleFiles(self):
+        for ordi in self.computers:
+            shutil.rmtree("ansible/roles/" + ordi.name)
+        os.system("rm ansible/inventory.yml")
+        os.system("rm ansible/detectionlab.yml")
+        os.system("rm resources/01-netcfg.yml")
+        shutil.rmtree("ansible/roles/commonWinEndpoint")
 
     def destroy(self):
         os.chdir("Labs/"+self.name+'/')
@@ -129,6 +141,8 @@ class lab:
         os.chdir("../..")
         self.network.freeHostOnlyNetwork()
         shutil.rmtree("Labs/"+self.name)
+        self.cleanAnsibleFiles()
+        
 
     
 class ordinateur:
@@ -152,19 +166,26 @@ class ordinateur:
                 "name":self.name,
                 "HostOnlyIP": self.IP,
                 "DNSServer": dnsIP,
-                "MACAdressHostOnly": self.macAddressHostOnly
+                "MACAdressHostOnly": self.macAddressHostOnly.replace(":", "-"),
+                "gateway":self.lab.network.IPmask+"1"
             })
         elif self.type == "dc":
             importConfigFile("ansible/roles/samples/dcSample.yml", "ansible/roles/"+self.name+"/tasks/main.yml", {
                 "name":self.name,
                 "HostOnlyIP": self.IP,
-                "MACAdressHostOnly": self.macAddressHostOnly
+                "MACAdressHostOnly": self.macAddressHostOnly.replace(":", "-"),
+                "gateway":self.lab.network.IPmask+"1"
+            })
+            os.system("mkdir ansible/roles/commonWinEndpoint")
+            os.system("mkdir ansible/roles/commonWinEndpoint/tasks")
+            importConfigFile("ansible/roles/samples/commonWinEndpointSample.yml", "ansible/roles/commonWinEndpoint/tasks/main.yml", {
+                "DCIP":self.IP
             })
         elif self.type == "logger":
             importConfigFile("ansible/roles/samples/loggerSample.yml", "ansible/roles/"+self.name+"/tasks/main.yml", {
                 "name":self.name,
                 "HostOnlyIP": self.IP,
-                "MACAdressHostOnly": self.macAddressHostOnly
+                "MACAdressHostOnly": self.macAddressHostOnly.replace(":", "-")
             })
         else:
             print("Type not found:" + self.type)
@@ -175,13 +196,6 @@ class ordinateur:
         self.roles = [self.name]
         if self.type == "win":
             self.roles.append("commonWinEndpoint")
-        elif self.type == "dc":
-            self.roles.append("dc")
-        elif self.type == "logger":
-            self.roles.append("logger")
-
-        if self.type == "win" or self.type == "dc":
-            self.roles.append("common")
 
         if "cybereason" in self.edr:
             self.roles.append("cybereasonWin" if self.type == "dc" or self.type == "win" else "cybereasonUbuntu")
@@ -210,7 +224,7 @@ class network:
                 fichier.writelines(liste)
                 fichier.close()
                 self.name = opts[0]
-                self.IPmask = opts[2]
+                self.IPmask = opts[2].replace("\n", "")
                 return 
         print("No free HostOnly network, please create one more...")
         raise Exception
@@ -254,13 +268,14 @@ def main():
     l.addComputer("win", "cybereason")
     l.createTfFiles()
     l.runTerraform()
-    input()
     l.createAnsibleFiles()
-
+    input()
+    l.runAnsible()
+    input()
 
     l.destroy()
 
-#main()
+main()
 
 
 

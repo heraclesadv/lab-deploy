@@ -86,6 +86,5 @@ If ((Get-Service -Name WinDefend -ErrorAction SilentlyContinue).status -eq 'Runn
   }
   Catch {
     Write-Host "$('[{0:HH:mm}]' -f (Get-Date)) Windows Defender did not uninstall successfully..."
-    Write-Host "$('[{0:HH:mm}]' -f (Get-Date)) We'll try again during install-red-team.ps1"
   }
 }
