@@ -1,3 +1,8 @@
+# Gestionnaire de Labs - AP
+# chose à faire: copier le HAProxy qui pointe vers .2. pour en faire un qui pointe vers chaque lab
+# aussi éditer le gitignore
+# tester guacamole avec la construction d'un lab
+
 import os
 import pickle
 import shutil
@@ -183,11 +188,18 @@ class lab:
         return chaine
 
     def buildGuacamoleConfigFile(self):
-        pass
         #That must be done before ansible logger run 
-        # YET TO BE DONE
-        # autre chose à faire: copier le HAProxy qui pointe vers .2. pour en faire un qui pointe vers chaque lab
-        # 
+        os.system("rm ../Vagrant/resources/guacamole/user-mapping.xml")
+        fichier = open("../Vagrant/resources/guacamole/user-mapping.xml", 'a')
+        fichier.write('<user-mapping>\n    <authorize username="vagrant" password="vagrant">\n')
+        for ordi in self.computers:
+            if ordi.type == "logger":
+                fichier.write('<connection name="'+ordi.name+'">\n            <protocol>ssh</protocol>\n            <param name="hostname">'+ordi.IP+'</param>\n            <param name="port">22</param>\n            <param name="username">vagrant</param>\n            <param name="password">vagrant</param>\n        </connection>\n\n')
+            elif ordi.type == "dc":
+                fichier.write('<connection name="'+ordi.name+' - Domain Admin">\n            <protocol>rdp</protocol>\n            <param name="hostname">'+ordi.IP+'</param>\n            <param name="port">3389</param>\n            <param name="username">administrator</param>\n            <param name="password">vagrant</param>\n            <param name="domain">windomain</param>\n            <param name="create-drive-path">true</param>\n            <param name="enable-drive">true</param>\n            <param name="drive-path">/etc/guacamole/shares/dc</param>\n            <param name="security">nla</param>\n            <param name="ignore-cert">true</param>\n        </connection>\n\n')
+            else:
+                fichier.write('<connection name="'+ordi.name+' - Domain User">\n            <protocol>rdp</protocol>\n            <param name="hostname">'+ordi.IP+'</param>\n            <param name="port">3389</param>\n            <param name="username">vagrant</param>\            <param name="password">vagrant</param>\n            <param name="domain">windomain</param>\n            <param name="create-drive-path">true</param>\n            <param name="enable-drive">true</param>\n            <param name="drive-path">/etc/guacamole/shares/win10c</param>\n            <param name="security">nla</param>\n            <param name="ignore-cert">true</param>\n        </connection>\n\n')
+        fichier.close()
 
     
 class ordinateur:
