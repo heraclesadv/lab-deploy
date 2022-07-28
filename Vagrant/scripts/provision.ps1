@@ -1,5 +1,6 @@
 # Purpose: Sets timezone to UTC, sets hostname, creates/joins domain.
 # Source: https://github.com/StefanScherer/adfs2
+param ([String] $ip)
 
 $ProfilePath = "C:\Windows\System32\WindowsPowerShell\v1.0\profile.ps1"
 $box = Get-ItemProperty -Path HKLM:SYSTEM\CurrentControlSet\Control\ComputerName\ComputerName -Name "ComputerName"
@@ -55,10 +56,10 @@ if ($env:COMPUTERNAME -imatch 'vagrant') {
   }
 
   Write-Host "$('[{0:HH:mm}]' -f (Get-Date)) My hostname is $env:COMPUTERNAME"
-  if ($env:COMPUTERNAME -imatch 'dc') {
-    . c:\vagrant\scripts\create-domain.ps1 192.168.56.102
+  if ($env:COMPUTERNAME.Substring(0,2) -imatch 'dc') {
+    . c:\vagrant\scripts\create-domain.ps1 $ip
   } else {
-    . c:\vagrant\scripts\join-domain.ps1
+    . c:\vagrant\scripts\join-domain.ps1 $ip
   }
 } else {
   Write-Host -fore green "$('[{0:HH:mm}]' -f (Get-Date)) I am domain joined!"

@@ -2,7 +2,7 @@
     <authorize username="vagrant" password="vagrant">
         <connection name="logger">
             <protocol>ssh</protocol>
-            <param name="hostname">192.168.56.105</param>
+            <param name="hostname">192.168.56.105</param> #TOMODIFY
             <param name="port">22</param>
             <param name="username">vagrant</param>
             <param name="password">vagrant</param>
