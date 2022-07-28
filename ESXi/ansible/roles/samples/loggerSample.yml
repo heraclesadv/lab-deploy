@@ -33,30 +33,13 @@
   shell: netplan apply
   become: yes
 
-- name: Add APT Repositories
-  apt_repository:
-    repo: "{{ item }}"
-  with_items:
-    - "ppa:apt-fast/stable"
-    - "ppa:rmescandon/yq"
-    - "ppa:oisf/suricata-stable"
-  become: yes
-
-- name: Install apt-fast
-  become: yes
-  apt:
-    name: apt-fast
-    update_cache: yes
-
-- name: Install tools via apt-fast
+- name: Install tools 
   args: 
     executable: /bin/bash
   become: yes
   shell: |
-      echo "[$(date +%H:%M:%S)]: Running apt-fast install..."
-      apt-fast -qq install -y jq whois build-essential git mysql-server redis-server python3-pip unzip htop yq libcairo2-dev libjpeg-turbo8-dev libpng-dev libtool-bin libossp-uuid-dev libavcodec-dev libavutil-dev libswscale-dev freerdp2-dev libpango1.0-dev libssh2-1-dev libvncserver-dev libtelnet-dev libssl-dev libvorbis-dev libwebp-dev tomcat9 tomcat9-admin tomcat9-user tomcat9-common
-  register: apt_install_prerequisites
-  failed_when: "'error' in apt_install_prerequisites.stderr"
+      apt update
+      apt install -y jq whois build-essential git mysql-server redis-server python3-pip unzip htop libcairo2-dev libjpeg-turbo8-dev libpng-dev libtool-bin libossp-uuid-dev libavcodec-dev libavutil-dev libswscale-dev freerdp2-dev libpango1.0-dev libssh2-1-dev libvncserver-dev libtelnet-dev libssl-dev libvorbis-dev libwebp-dev tomcat9 tomcat9-admin tomcat9-user tomcat9-common
 
 - name: Update the MOTD
   args: 
@@ -74,30 +57,6 @@
     chmod +x /etc/update-motd.d/20-detectionlab
   register: modify_motd
   failed_when: "'error' in modify_motd.stderr"
-
-- name: Test Prerequisites
-  args: 
-    executable: /bin/bash
-  become: yes
-  shell: |
-    for package in jq whois build-essential git unzip yq mysql-server redis-server python3-pip; do
-      echo "[$(date +%H:%M:%S)]: [TEST] Validating that $package is correctly installed..."
-      # Loop through each package using dpkg
-      if ! dpkg -S $package >/dev/null; then
-        # If which returns a non-zero return code, try to re-install the package
-        echo "[-] $package was not found. Attempting to reinstall."
-        apt-get -qq update && apt-get install -y $package
-        if ! which $package >/dev/null; then
-          # If the reinstall fails, give up
-          echo "[X] Unable to install $package even after a retry. Exiting."
-          exit 1
-        fi
-      else
-        echo "[+] $package was successfully installed!"
-      fi
-    done
-  register: test_prerequisites
-  failed_when: "'error' in test_prerequisites.stderr"
 
 - name: Install Guacamole
   args: 

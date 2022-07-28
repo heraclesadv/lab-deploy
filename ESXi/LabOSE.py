@@ -132,7 +132,7 @@ class lab:
             shutil.rmtree("ansible/roles/" + ordi.name)
         os.system("rm ansible/inventory.yml")
         os.system("rm ansible/detectionlab.yml")
-        os.system("rm resources/01-netcfg.yml")
+        os.system("rm resources/01-netcfg.yaml")
         shutil.rmtree("ansible/roles/commonWinEndpoint")
 
     def destroy(self):
@@ -271,7 +271,7 @@ def main():
 
     l.createAnsibleFiles()
 
-    input()
+    input("Appuyer sur entrée pour lancer Ansible")
     l.runAnsible()
     input()
     l.destroy()

@@ -2,7 +2,7 @@
     <authorize username="vagrant" password="vagrant">
         <connection name="logger">
             <protocol>ssh</protocol>
-            <param name="hostname">192.168.56.105</param> #TOMODIFY
+            <param name="hostname">192.168.56.105</param> #TOMODIFY il va falloir dl depuis master sans doute
             <param name="port">22</param>
             <param name="username">vagrant</param>
             <param name="password">vagrant</param>
