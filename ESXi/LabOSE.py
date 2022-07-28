@@ -25,13 +25,10 @@ def importConfigFile(sampleFile:str, destFile:str, options:dict):
 
 
 class lab:
-    def __init__(self, name, id=2):
+    def __init__(self, name):
         self.name = name.replace(" ", "")
-        self.id = id 
-        self.status = "down"
         self.computers = []
         self.network = network()
-
         self.IPcounter = 2
     
     def addComputer(self, type, edr):
@@ -66,7 +63,7 @@ class lab:
                     {"name": ordi.name, "MACAddressHostOnly":ordi.macAddressHostOnly, "MACAddressLanPortGroup":ordi.macAddressLanPortGroup})
             else:
                 print("Type not found for computer " + ordi.name)
-                raise Exception
+                exit(1)
 
         importConfigFile("terraform/variableSample.tf", 
             "Labs/" + self.name + "/variables.tf",
@@ -95,6 +92,7 @@ class lab:
             ordi.dhcpIP = IP 
 
     def createAnsibleFiles(self):
+        self.buildGuacamoleConfigFile()
         os.system("rm ansible/inventory.yml")
         fichier = open("ansible/inventory.yml", 'a')
         self.getDHCPIPs()
@@ -118,8 +116,6 @@ class lab:
                 fichier.write("    - "+ role + "\n")
             fichier.write("  tags: " + ordi.name + "\n\n")
         fichier.close()
-        
-
 
     def runAnsible(self):
         for ordi in self.computers:
@@ -141,8 +137,57 @@ class lab:
         os.chdir("../..")
         self.network.freeHostOnlyNetwork()
         shutil.rmtree("Labs/"+self.name)
-        self.cleanAnsibleFiles()
-        
+        try:
+            self.cleanAnsibleFiles()
+        except:
+            pass
+
+    def disconnectManagementNetwork(self):
+        for ordi in self.computers:
+            if ordi.ESXiID == 0:
+                self.getDHCPIPs()
+                break
+        for ordi in self.computers:
+            self.network.ESXiCmd("vim-cmd vmsvc/device.connection "+ordi.ESXiID+" 4000 0")
+
+    def connectManagementNetwork(self):
+        for ordi in self.computers:
+            self.network.ESXiCmd("vim-cmd vmsvc/device.connection "+ordi.ESXiID+" 4000 1")
+
+    def takeSnapshot(self):
+        for ordi in self.computers:
+            if ordi.ESXiID == 0:
+                self.getDHCPIPs()
+                break
+
+        for ordi in self.computers:
+            self.network.ESXiCmd("vim-cmd vmsvc/snapshot.create "+ordi.ESXiID+" InstallationOver")
+
+    def restoreSnapshot(self):
+        #Will restore the snapshot took by takeSnapshot at the end of install
+        for ordi in self.computers:
+            self.network.ESXiCmd("vim-cmd vmsvc/snapshot.revert "+ordi.ESXiID+" 1 0")
+        for ordi in self.computers:
+            self.network.ESXiCmd("vim-cmd vmsvc/power.on " + ordi.ESXiID)
+
+    def save(self):
+        with open("Labs/"+self.name+"/pickleDump", "wb") as fichier:
+            pickle.dump(self, fichier)
+
+    def __str__(self):
+        chaine = ""
+        chaine += "Lab name: "+ self.name
+        chaine += "\n   Name\t\tIP\t\tEDR\t\tVM's ID"
+        for ordi in self.computers:
+            chaine += "\n - " + ordi.name + "\t\t" + ordi.IP + "\t\t" + ordi.edr + "\t\t" + str(ordi.ESXiID)
+        return chaine
+
+    def buildGuacamoleConfigFile(self):
+        pass
+        #That must be done before ansible logger run 
+        # YET TO BE DONE
+        # autre chose à faire: copier le HAProxy qui pointe vers .2. pour en faire un qui pointe vers chaque lab
+        # 
 
     
 class ordinateur:
@@ -189,7 +234,7 @@ class ordinateur:
             })
         else:
             print("Type not found:" + self.type)
-            raise Exception
+            exit(1)
 
     def buildAnsibleTasks(self, dnsIP):
         self.buildRole(dnsIP)
@@ -227,7 +272,7 @@ class network:
                 self.IPmask = opts[2].replace("\n", "")
                 return 
         print("No free HostOnly network, please create one more...")
-        raise Exception
+        exit(1)
 
     def freeHostOnlyNetwork(self):
         fichier = open("Networks.txt", 'r')
@@ -242,44 +287,146 @@ class network:
                 fichier.close()
                 return 
         print("Network to be freed not found !")
-        raise Exception
+        exit(1)
 
+def createLab() -> lab:
 
-
-def main():
-    
     name = input("Lab name: ").replace(" ", "")
 
     try:
         os.mkdir("Labs/" + name)
     except:
-        rep = input("A lab with this name already exists, do you want to override the files ? (Y/n)")
-        if rep == "" or rep == "y" or rep == "Y" or rep =="yes":
+        rep = input("A lab with this name already exists, do you want to override the files ? (y/N) ")
+        if rep == "y" or rep == "Y" or rep =="yes":
             shutil.rmtree("Labs/" + name)
             os.mkdir("Labs/" + name)
         else:
             print("Aborting...")
-            raise Exception
+            shutil.rmtree("Labs/" + name)
+            exit(1)
 
-    l = lab(name, id=2)
+    l = lab(name)
 
-    l.addComputer("logger", "cybereason")
-    l.addComputer("dc", "harfang")
-    l.addComputer("win", "cybereason")
+    a = "start"
+    while not a in ["", "cybereason", "harfang"]:
+        a = input("Which EDR for your logger ? (Cybereason, harfang, leave empty for none) ").lower()
+    l.addComputer("logger", a)
+
+    a = "start"
+    while not a in ["", "cybereason", "harfang"]:
+        a = input("Which EDR for your DC ? (Cybereason, harfang, leave empty for none) ").lower()
+    l.addComputer("dc", a)
+
+    while True:
+        print(l)
+        res = input("Do you want to add a windows pc ? (y/N)")
+        if res != "y" and res != "Y" and res != "yes":
+            break
+        a = "start"
+        while not a in ["", "cybereason", "harfang"]:
+            a = input("Which EDR for your PC ? (Cybereason, harfang, leave empty for none) ").lower()
+        l.addComputer("win", a)
+
     l.createTfFiles()
+    res = input("Files created, go ? (y/N) ")
+    if res != "y" and res != "Y" and res != "yes":
+        print("Aborting...")
+        shutil.rmtree("Labs/" + name)
+
+        exit(1)
+
+    print("Running Terraform ...")
     l.runTerraform()
-
+    time.sleep(15)
+    print("Creating ansible files...")
     l.createAnsibleFiles()
-
-    input("Appuyer sur entrée pour lancer Ansible")
+    print("Running ansible...")
     l.runAnsible()
-    input()
-    l.destroy()
+    time.sleep(5)
+    print("Done ! Cleaning...")
+    l.cleanAnsibleFiles()
+    print("Taking snapshots...")
+    l.takeSnapshot()
+    print("Saving lab...")
+    l.save()
+    print("Creation over, lab created:")
+    print(l)
+    return l
 
-main()
+def loadLab(name) -> lab:
+    with open("Labs/"+name+"/pickleDump", "rb") as fichier:
+        l = pickle.load(fichier)
+    print("Lab loaded:")
+    print(l)
+    return l
 
+def listLabs(l=None):
+    for dir in os.listdir("Labs/"):
+        try:
+            if l.name == dir:
+                print(" * " + dir)
+            else:
+                print("   " + dir)
+        except:
+            print("   " + dir)
 
+print("Hello ! Welcome on labs management console ! ")
+while True:
+    l = None
+    print("No lab is actually loaded, you can create one, or select an existing one.")
+    print("(create / list / load )")
+    uc = input(" >> ").lower()
 
-
-
+    if uc == "create":
+        l = createLab()
+    elif uc == "list":
+        listLabs(l)
+    elif uc == "load":
+        b = input("Please enter the name of the lab to load: ")
+        try:
+            l = loadLab(b)
+        except:
+            print("Failed ! Do your lab exists ? ")
+    else:
+        print("Command not found !")
     
+    while l != None:
+        print("A lab is loaded ! ")
+        print(l)
+        print("(list, reset, destroy, unload, rebuild)")
+        c = input(" >> ").lower()
+
+        if c == "list":
+            listLabs(l)
+        elif c == "reset":
+            l.restoreSnapshot()
+        elif c == "destroy":
+            print("Destroying the lab " + l.name)
+            l.destroy()
+            l = None 
+        elif c == "unload":
+            l = None
+        elif c == "rebuild":
+            os.chdir("Labs/"+l.name+'/')
+            os.system("terraform destroy -auto-approve")
+            os.chdir("../..")
+            l.cleanAnsibleFiles()
+            print("Running Terraform ...")
+            l.runTerraform()
+            time.sleep(15)
+            print("Creating ansible files...")
+            l.createAnsibleFiles()
+            print("Running ansible...")
+            l.runAnsible()
+            time.sleep(5)
+            print("Done ! Cleaning...")
+            l.cleanAnsibleFiles()
+            print("Taking snapshots...")
+            l.takeSnapshot()
+            print("Saving lab...")
+            l.save()
+            print("Creation over, lab created:")
+            print(l)
+        else:
+            print("Command not found !")
+
