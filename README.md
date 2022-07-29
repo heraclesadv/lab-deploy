@@ -2,17 +2,17 @@
 
 Forked from: https://github.com/clong/DetectionLab
 
-Doc: https://www.detectionlab.network/deployment/esxi/
+Doc: https://www.detectionlab.network/deployment/esxi/ --> Follow the requirements
 
 Files to be changed before use:
 
-ESXi/variables.tf
-
-ESXi/ansible/env.sh
+ESXi/env.py
 
 ## Use
 cd ESXi
 
-sudo bash rebuild.sh
+python3 LabOSE.py
 
-To add a computer you can use as example the commit "Added win10b"
+## License
+
+From DetectionLab : MIT License

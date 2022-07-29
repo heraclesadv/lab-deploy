@@ -1,22 +1,23 @@
 # Gestionnaire de Labs - AP
 # chose à faire: copier le HAProxy qui pointe vers .2. pour en faire un qui pointe vers chaque lab
-# aussi éditer le gitignore
 # tester guacamole avec la construction d'un lab
 
-import os
+import os 
 import pickle
 import shutil
 import random
 import time
-from env import *
+from env import * #le fichier env.py est à remplir selon le sample
 
 def generateMacAddress():
+    # Génère une adresse MAC aléatoirement, les risques de collision sont faibles
     return "02:00:00:%02x:%02x:%02x" % (random.randint(0, 255),
                              random.randint(0, 255),
                              random.randint(0, 255))
 
 def importConfigFile(sampleFile:str, destFile:str, options:dict):
-    #options = {"name":"logger", "MACAddressHostOnly":"AAA", "MACAddressLanPortGroup":"BBB"}
+    # Permet de copier un sample et de remplir les champs entre < et >
+    # exemple : options = {"name":"logger", "MACAddressHostOnly":"AAA", "MACAddressLanPortGroup":"BBB"}
     fichier = open(sampleFile, 'r')
     sampleText = fichier.read()
     fichier.close()
@@ -30,32 +31,40 @@ def importConfigFile(sampleFile:str, destFile:str, options:dict):
 
 
 class lab:
-    def __init__(self, name):
+    def __init__(self, name:str):
         self.name = name.replace(" ", "")
         self.computers = []
         self.network = network()
-        self.IPcounter = 2
+        self.IPcounter = 2 # Va permettre d'associer une IP unique à chaque machine
     
-    def addComputer(self, type, edr):
-        self.computers.append(ordinateur(type+str(self.IPcounter), type, edr=edr, macAddressHostOnly=generateMacAddress(),
+    def addComputer(self, type:str, edr:str):
+        # Ajoute un objet ordinateur au Lab mais ne crée pas les fichiers de conf
+        self.computers.append(ordinateur(self.name+type.capitalize()+str(self.IPcounter), type, edr=edr, macAddressHostOnly=generateMacAddress(),
             macAddressLanPortGroup=generateMacAddress(), IP=self.network.IPmask+str(self.IPcounter),
             lab=self))
         self.IPcounter += 1
 
     def getDNSIP(self):
+        # Utile pour remplir certains fichiers de configuration ansible
         for ordi in self.computers:
             if ordi.type == "dc":
                 return ordi.IP.replace("\n", "")
         return "8.8.8.8"
 
     def createTfFiles(self):
+        # Crée les fichiers de configuration terraform à partir des modèles dans le dossier terraform
+        # Remarque: terraform importe tous les fichiers en .tf présents dans le répertoire
+
+        # On commence par cleaner si il y a déjà des fichiers terraform pour pas qu'ils interfèrent
         test = os.listdir("Labs/" + self.name + '/')
         for item in test:
             if item.endswith(".tf"):
                 os.remove(os.path.join("Labs/" + self.name + '/', item))
         
+        # Rien à modifier sur le header:
         shutil.copyfile("terraform/header.tf", "Labs/" + self.name + "/header.tf")
 
+        # Pour chaque ordinateur on utilise le sample correspondant:
         for ordi in self.computers:
             if ordi.type == 'win':
                 importConfigFile("terraform/winSample.tf", "Labs/" + self.name + '/' + ordi.name + '.tf', 
@@ -70,6 +79,7 @@ class lab:
                 print("Type not found for computer " + ordi.name)
                 exit(1)
 
+        # On remplit le fichier de configuration:
         importConfigFile("terraform/variableSample.tf", 
             "Labs/" + self.name + "/variables.tf",
             {"ESXiIP": ESXi, 
@@ -80,16 +90,19 @@ class lab:
             "HostOnlyNetwork":self.network.name
             })
 
+        # Ces fichiers n'ont pas non plus besoin de modification:
         shutil.copyfile("terraform/versions.tf", "Labs/" + self.name + "/versions.tf")
         shutil.copytree("terraform/.terraform", "Labs/" + self.name + "/.terraform")
 
     def runTerraform(self):
+        # Lance terraform, il faut que la fonction précédente ai été exécutée
         os.chdir("Labs/"+self.name+'/')
         os.system("terraform init")
         os.system("terraform apply -auto-approve")
         os.chdir("../..")
 
     def getDHCPIPs(self): 
+        # Récupère les IPs des ordinateurs du Lab sur le réseau de management (où elles sont attribuées par DHCP), utile pour ansible
         for ordi in self.computers:
             id = os.popen("sshpass -p " + password+ " ssh -o StrictHostKeyChecking=no " + user + "@" + ESXi + " " + "vim-cmd vmsvc/getallvms | grep \"" + ordi.name + "/" + ordi.name + ".vmx\" | cut -c1-3 | awk '{$1=$1};1'").read().replace("\n", "")
             IP = os.popen("sshpass -p " + password+ " ssh -o StrictHostKeyChecking=no " + user + "@" + ESXi + " " + "vim-cmd vmsvc/get.guest "+id+" | grep -m 1 '192.168.1.' | sed 's/[^0-9+.]*//g'").read().replace("\n", "")
@@ -97,7 +110,11 @@ class lab:
             ordi.dhcpIP = IP 
 
     def createAnsibleFiles(self):
-        self.buildGuacamoleConfigFile()
+        # Crée les fichiers de configuration ansible à partir des samples dans ansible/roles/samples et ex nihilo
+
+        self.buildGuacamoleConfigFile()# fichier de configuration de guacamole qui est téléversé sur le logger par ansible
+
+        # On crée ex nihilo le fichier inventory.yml
         os.system("rm ansible/inventory.yml")
         fichier = open("ansible/inventory.yml", 'a')
         self.getDHCPIPs()
@@ -105,30 +122,33 @@ class lab:
             if ordi.type == "logger":
                 fichier.write(ordi.name + ":\n  hosts:\n    "+ordi.dhcpIP+":\n      ansible_user: vagrant\n      ansible_password: vagrant\n      ansible_port: 22\n      ansible_connection: ssh\n      ansible_ssh_common_args: '-o UserKnownHostsFile=/dev/null'\n\n")
                 os.system("rm resources/01-netcfg.yml")
-                importConfigFile("resources/01-netcfgSample.yaml", "resources/01-netcfg.yaml", {"loggerIP":ordi.IP})
+                importConfigFile("resources/01-netcfgSample.yaml", "resources/01-netcfg.yaml", {"loggerIP":ordi.IP}) # fichier de conf supp. pour le logger
             else:
                 fichier.write(ordi.name + ":\n  hosts:\n    "+ordi.dhcpIP+":\n\n")
         fichier.close()
 
+        # On crée ex nihilo le fichier detectionlab.yml
         os.system("rm ansible/detectionlab.yml")
         fichier = open("ansible/detectionlab.yml", 'a')
         fichier.write("---\n")
         for ordi in self.computers:
             fichier.write("- hosts: " + ordi.name)
             fichier.write("\n  roles:\n")
-            ordi.buildAnsibleTasks(self.getDNSIP())
+            ordi.buildAnsibleTasks(self.getDNSIP()) # dans cette fonction sont crée les roles à partir des samples
             for role in ordi.roles:
                 fichier.write("    - "+ role + "\n")
             fichier.write("  tags: " + ordi.name + "\n\n")
         fichier.close()
 
     def runAnsible(self):
+        # Lance les scripts ansible créés ordinateur par ordinateur
         for ordi in self.computers:
             os.chdir("ansible")
             os.system("ansible-playbook detectionlab.yml --tags \""+ordi.name+"\" --timeout 30")
             os.chdir("..")
 
     def cleanAnsibleFiles(self):
+        # Supprime les fichier que l'on vient d'ajouter car il faut éventuellement libèrer la place pour un autre lab
         for ordi in self.computers:
             shutil.rmtree("ansible/roles/" + ordi.name)
         os.system("rm ansible/inventory.yml")
@@ -137,17 +157,19 @@ class lab:
         shutil.rmtree("ansible/roles/commonWinEndpoint")
 
     def destroy(self):
+        # Détruit tous les fichiers et efface les modifications faites
         os.chdir("Labs/"+self.name+'/')
         os.system("terraform destroy -auto-approve")
         os.chdir("../..")
         self.network.freeHostOnlyNetwork()
         shutil.rmtree("Labs/"+self.name)
         try:
-            self.cleanAnsibleFiles()
+            self.cleanAnsibleFiles() # Peut échouer si les fichiers n'existent pas
         except:
             pass
 
     def disconnectManagementNetwork(self):
+        # A la fin de la construction on déconnecte le réseau de management pour segmenter
         for ordi in self.computers:
             if ordi.ESXiID == 0:
                 self.getDHCPIPs()
@@ -156,30 +178,35 @@ class lab:
             self.network.ESXiCmd("vim-cmd vmsvc/device.connection "+ordi.ESXiID+" 4000 0")
 
     def connectManagementNetwork(self):
+        # Faire l'opération inverse si nécessaire (inutilisé)
         for ordi in self.computers:
             self.network.ESXiCmd("vim-cmd vmsvc/device.connection "+ordi.ESXiID+" 4000 1")
 
     def takeSnapshot(self):
+        # Prendre une snapshot à la fin de l'installation
         for ordi in self.computers:
             if ordi.ESXiID == 0:
                 self.getDHCPIPs()
                 break
 
         for ordi in self.computers:
-            self.network.ESXiCmd("vim-cmd vmsvc/snapshot.create "+ordi.ESXiID+" InstallationOver")
+            self.network.ESXiCmd("vim-cmd vmsvc/snapshot.create "+ordi.ESXiID+" AutoSnapshot")
 
     def restoreSnapshot(self):
         #Will restore the snapshot took by takeSnapshot at the end of install
+        #In fact it restore the first snapshot taken
         for ordi in self.computers:
             self.network.ESXiCmd("vim-cmd vmsvc/snapshot.revert "+ordi.ESXiID+" 1 0")
         for ordi in self.computers:
             self.network.ESXiCmd("vim-cmd vmsvc/power.on " + ordi.ESXiID)
 
     def save(self):
+        # Save the self (lab) object so we can load it later
         with open("Labs/"+self.name+"/pickleDump", "wb") as fichier:
             pickle.dump(self, fichier)
 
     def __str__(self):
+        # Used to print the lab
         chaine = ""
         chaine += "Lab name: "+ self.name
         chaine += "\n   Name\t\tIP\t\tEDR\t\tVM's ID"
@@ -188,21 +215,24 @@ class lab:
         return chaine
 
     def buildGuacamoleConfigFile(self):
+        #File used by guacamole to know how to connect to each machine of the lab
         #That must be done before ansible logger run 
         os.system("rm ../Vagrant/resources/guacamole/user-mapping.xml")
         fichier = open("../Vagrant/resources/guacamole/user-mapping.xml", 'a')
         fichier.write('<user-mapping>\n    <authorize username="vagrant" password="vagrant">\n')
         for ordi in self.computers:
             if ordi.type == "logger":
-                fichier.write('<connection name="'+ordi.name+'">\n            <protocol>ssh</protocol>\n            <param name="hostname">'+ordi.IP+'</param>\n            <param name="port">22</param>\n            <param name="username">vagrant</param>\n            <param name="password">vagrant</param>\n        </connection>\n\n')
+                fichier.write('        <connection name="'+ordi.name+'">\n            <protocol>ssh</protocol>\n            <param name="hostname">'+ordi.IP+'</param>\n            <param name="port">22</param>\n            <param name="username">vagrant</param>\n            <param name="password">vagrant</param>\n        </connection>\n\n')
             elif ordi.type == "dc":
-                fichier.write('<connection name="'+ordi.name+' - Domain Admin">\n            <protocol>rdp</protocol>\n            <param name="hostname">'+ordi.IP+'</param>\n            <param name="port">3389</param>\n            <param name="username">administrator</param>\n            <param name="password">vagrant</param>\n            <param name="domain">windomain</param>\n            <param name="create-drive-path">true</param>\n            <param name="enable-drive">true</param>\n            <param name="drive-path">/etc/guacamole/shares/dc</param>\n            <param name="security">nla</param>\n            <param name="ignore-cert">true</param>\n        </connection>\n\n')
+                fichier.write('        <connection name="'+ordi.name+' - Domain Admin">\n            <protocol>rdp</protocol>\n            <param name="hostname">'+ordi.IP+'</param>\n            <param name="port">3389</param>\n            <param name="username">administrator</param>\n            <param name="password">vagrant</param>\n            <param name="domain">windomain</param>\n            <param name="create-drive-path">true</param>\n            <param name="enable-drive">true</param>\n            <param name="drive-path">/etc/guacamole/shares/dc</param>\n            <param name="security">nla</param>\n            <param name="ignore-cert">true</param>\n        </connection>\n\n')
             else:
-                fichier.write('<connection name="'+ordi.name+' - Domain User">\n            <protocol>rdp</protocol>\n            <param name="hostname">'+ordi.IP+'</param>\n            <param name="port">3389</param>\n            <param name="username">vagrant</param>\            <param name="password">vagrant</param>\n            <param name="domain">windomain</param>\n            <param name="create-drive-path">true</param>\n            <param name="enable-drive">true</param>\n            <param name="drive-path">/etc/guacamole/shares/win10c</param>\n            <param name="security">nla</param>\n            <param name="ignore-cert">true</param>\n        </connection>\n\n')
+                fichier.write('        <connection name="'+ordi.name+' - Domain User">\n            <protocol>rdp</protocol>\n            <param name="hostname">'+ordi.IP+'</param>\n            <param name="port">3389</param>\n            <param name="username">vagrant</param>\            <param name="password">vagrant</param>\n            <param name="domain">windomain</param>\n            <param name="create-drive-path">true</param>\n            <param name="enable-drive">true</param>\n            <param name="drive-path">/etc/guacamole/shares/win10c</param>\n            <param name="security">nla</param>\n            <param name="ignore-cert">true</param>\n        </connection>\n\n')
+        fichier.write("    </authorize>\n</user-mapping>")
         fichier.close()
 
     
 class ordinateur:
+    # Classe qui représente un ordinateur du lab
     def __init__(self, name:str, type:str, edr:str=None, macAddressHostOnly="", macAddressLanPortGroup="", IP="", lab:lab=None):
         self.name = name
         self.type = type # logger, dc or win
@@ -212,10 +242,11 @@ class ordinateur:
         self.macAddressLanPortGroup = macAddressLanPortGroup
         self.IP = IP #host only ip
         self.lab = lab
-        self.ESXiID = 0
-        self.dhcpIP = ""
+        self.ESXiID = 0 # Va être changé quand il sera connu
+        self.dhcpIP = "" # idem
 
-    def buildRole(self, dnsIP):
+    def buildRole(self, dnsIP:str):
+        #Construit le rôle associé à la machine à partir des templates
         os.system("mkdir ansible/roles/" + self.name)
         os.system("mkdir ansible/roles/"+self.name+"/tasks")
         if self.type == "win":
@@ -237,7 +268,7 @@ class ordinateur:
             os.system("mkdir ansible/roles/commonWinEndpoint/tasks")
             importConfigFile("ansible/roles/samples/commonWinEndpointSample.yml", "ansible/roles/commonWinEndpoint/tasks/main.yml", {
                 "DCIP":self.IP
-            })
+            }) # on en profite pour construire le rôle commun aux endpoints win, cette sépération est devenue inutile avec le temps
         elif self.type == "logger":
             importConfigFile("ansible/roles/samples/loggerSample.yml", "ansible/roles/"+self.name+"/tasks/main.yml", {
                 "name":self.name,
@@ -248,7 +279,8 @@ class ordinateur:
             print("Type not found:" + self.type)
             exit(1)
 
-    def buildAnsibleTasks(self, dnsIP):
+    def buildAnsibleTasks(self, dnsIP:str):
+        # Choisit les rôles ansible à attribuer à chacun des ordinateurs
         self.buildRole(dnsIP)
         self.roles = [self.name]
         if self.type == "win":
@@ -260,16 +292,20 @@ class ordinateur:
             self.roles.append("harfangWin" if self.type == "dc" or self.type == "win" else "harfangUbuntu")
 
 class network:
+    # Est lié à un lab, permet de gérer tous les aspects liés au réseau
     def __init__(self):
         self.name = ""
         self.IPmask = ""
         self.getHostOnlyNetwork()
     
     def ESXiCmd(self, command:str):
-        print("sshpass -p " + password+ " ssh -o StrictHostKeyChecking=no " + user + "@" + ESXi + " " + command)
+        # Exécute une commande sur l'ESXi, utilisée partout
+        print(user + "@" + ESXi + " " + command)
         os.system("sshpass -p " + password+ " ssh -o StrictHostKeyChecking=no " + user + "@" + ESXi + " " + command)
     
     def getHostOnlyNetwork(self):
+        # Chosit un des réseaux disponibles dans Networks.txt
+        # pour en ajouter un il faut l'ajouter sur l'ESXi , y connecter le pfsense et configure le pare-feu de ce dernier pour donner l'accès à internet
         fichier = open("Networks.txt", 'r')
         liste = fichier.readlines()
         fichier.close()
@@ -287,6 +323,7 @@ class network:
         exit(1)
 
     def freeHostOnlyNetwork(self):
+        # Inverse de la fonction précédente.
         fichier = open("Networks.txt", 'r')
         liste = fichier.readlines()
         fichier.close()
@@ -300,6 +337,8 @@ class network:
                 return 
         print("Network to be freed not found !")
         exit(1)
+
+# On passe aux fonctions qui vont exécuter les commandes de l'utilisateur
 
 def createLab() -> lab:
 
@@ -386,7 +425,7 @@ print("Hello ! Welcome on labs management console ! ")
 while True:
     l = None
     print("No lab is actually loaded, you can create one, or select an existing one.")
-    print("(create / list / load )")
+    print("(create / list / load / exit)")
     uc = input(" >> ").lower()
 
     if uc == "create":
@@ -399,13 +438,15 @@ while True:
             l = loadLab(b)
         except:
             print("Failed ! Do your lab exists ? ")
+    elif uc == "exit":
+        exit(0)
     else:
         print("Command not found !")
     
     while l != None:
         print("A lab is loaded ! ")
         print(l)
-        print("(list, reset, destroy, unload, rebuild)")
+        print("(list, reset, destroy, unload, rebuild, exit)")
         c = input(" >> ").lower()
 
         if c == "list":
@@ -418,6 +459,8 @@ while True:
             l = None 
         elif c == "unload":
             l = None
+        elif c == "exit":
+            exit(0)
         elif c == "rebuild":
             os.chdir("Labs/"+l.name+'/')
             os.system("terraform destroy -auto-approve")
