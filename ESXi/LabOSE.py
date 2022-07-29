@@ -224,9 +224,9 @@ class lab:
             if ordi.type == "logger":
                 fichier.write('        <connection name="'+ordi.name+'">\n            <protocol>ssh</protocol>\n            <param name="hostname">'+ordi.IP+'</param>\n            <param name="port">22</param>\n            <param name="username">vagrant</param>\n            <param name="password">vagrant</param>\n        </connection>\n\n')
             elif ordi.type == "dc":
-                fichier.write('        <connection name="'+ordi.name+' - Domain Admin">\n            <protocol>rdp</protocol>\n            <param name="hostname">'+ordi.IP+'</param>\n            <param name="port">3389</param>\n            <param name="username">administrator</param>\n            <param name="password">vagrant</param>\n            <param name="domain">windomain</param>\n            <param name="create-drive-path">true</param>\n            <param name="enable-drive">true</param>\n            <param name="drive-path">/etc/guacamole/shares/dc</param>\n            <param name="security">nla</param>\n            <param name="ignore-cert">true</param>\n        </connection>\n\n')
+                fichier.write('        <connection name="'+ordi.name+' - Domain Admin">\n            <protocol>rdp</protocol>\n            <param name="hostname">'+ordi.IP+'</param>\n            <param name="port">3389</param>\n            <param name="username">administrator</param>\n            <param name="password">vagrant</param>\n            <param name="domain">windomain</param>\n            <param name="create-drive-path">true</param>\n            <param name="enable-drive">true</param>\n            <param name="drive-path">/etc/guacamole/shares/'+ordi.name+'</param>\n            <param name="security">nla</param>\n            <param name="ignore-cert">true</param>\n        </connection>\n\n')
             else:
-                fichier.write('        <connection name="'+ordi.name+' - Domain User">\n            <protocol>rdp</protocol>\n            <param name="hostname">'+ordi.IP+'</param>\n            <param name="port">3389</param>\n            <param name="username">vagrant</param>\n            <param name="password">vagrant</param>\n            <param name="domain">windomain</param>\n            <param name="create-drive-path">true</param>\n            <param name="enable-drive">true</param>\n            <param name="drive-path">/etc/guacamole/shares/win10c</param>\n            <param name="security">nla</param>\n            <param name="ignore-cert">true</param>\n        </connection>\n\n')
+                fichier.write('        <connection name="'+ordi.name+' - Domain User">\n            <protocol>rdp</protocol>\n            <param name="hostname">'+ordi.IP+'</param>\n            <param name="port">3389</param>\n            <param name="username">vagrant</param>\n            <param name="password">vagrant</param>\n            <param name="domain">windomain</param>\n            <param name="create-drive-path">true</param>\n            <param name="enable-drive">true</param>\n            <param name="drive-path">/etc/guacamole/shares/'+ordi.name+'</param>\n            <param name="security">nla</param>\n            <param name="ignore-cert">true</param>\n        </connection>\n\n')
         fichier.write("    </authorize>\n</user-mapping>")
         fichier.close()
 
@@ -396,6 +396,8 @@ def createLab() -> lab:
     time.sleep(5)
     print("Done ! Cleaning...")
     l.cleanAnsibleFiles()
+    print("Disconnecting management network...")
+    l.disconnectManagementNetwork()
     print("Taking snapshots...")
     l.takeSnapshot()
     print("Saving lab...")
@@ -483,6 +485,8 @@ while True:
             time.sleep(5)
             print("Done ! Cleaning...")
             l.cleanAnsibleFiles()
+            print("Disconnecting management network...")
+            l.disconnectManagementNetwork()
             print("Taking snapshots...")
             l.takeSnapshot()
             print("Saving lab...")
