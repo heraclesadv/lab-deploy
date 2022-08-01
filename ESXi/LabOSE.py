@@ -1,6 +1,6 @@
 # Gestionnaire de Labs - AP
 
-import datetime
+from datetime import datetime
 import os 
 import pickle
 import shutil
@@ -121,7 +121,7 @@ class lab:
             if ordi.type == "logger":
                 fichier.write(ordi.name + ":\n  hosts:\n    "+ordi.dhcpIP+":\n      ansible_user: vagrant\n      ansible_password: vagrant\n      ansible_port: 22\n      ansible_connection: ssh\n      ansible_ssh_common_args: '-o UserKnownHostsFile=/dev/null'\n\n")
                 os.system("rm resources/01-netcfg.yml")
-                importConfigFile("resources/01-netcfgSample.yaml", "resources/01-netcfg.yaml", {"loggerIP":ordi.IP, "mask": self.network.IPmask}) # fichier de conf supp. pour le logger
+                importConfigFile("resources/01-netcfgSample.yaml", "resources/01-netcfg.yaml", {"loggerIP":ordi.IP, "IPmask": self.network.IPmask + "1"}) # fichier de conf supp. pour le logger
             else:
                 fichier.write(ordi.name + ":\n  hosts:\n    "+ordi.dhcpIP+":\n\n")
         fichier.close()
@@ -422,85 +422,88 @@ def listLabs(l=None):
         except:
             print("   " + dir)
 
-if os.path.exists("lock"):
-    print("The script did not finish as expected, or someone else is using the script. Two labs cannot be either created or destroyed at the same time, doing so could result in the loss of both labs and a script failure. If you are sure to be the only one using this script, please remove the lock file. In case of a script failure, check configuration files.")
-    raise Exception
-fichier = open("lock", 'w')
-fichier.write(datetime.now().strftime("%H:%M:%S"))
-fichier.close()
+def main():
+    if os.path.exists("lock"):
+        print("The script did not finish as expected, or someone else is using the script. Two labs cannot be either created or destroyed at the same time, doing so could result in the loss of both labs and a script failure. If you are sure to be the only one using this script, please remove the lock file. In case of a script failure, check configuration files.")
+        raise Exception
+    fichier = open("lock", 'w')
+    fichier.write(datetime.now().strftime("%H:%M:%S"))
+    fichier.close()
 
-print("Hello ! Welcome on labs management console ! ")
-while True:
-    l = None
-    print("No lab is actually loaded, you can create one, or select an existing one.")
-    print("(create / list / load / exit)")
-    uc = input(" >> ").lower()
+    print("Hello ! Welcome on labs management console ! ")
+    while True:
+        l = None
+        print("No lab is actually loaded, you can create one, or select an existing one.")
+        print("(create / list / load / exit)")
+        uc = input(" >> ").lower()
 
-    if uc == "create":
-        l = createLab()
-    elif uc == "list":
-        listLabs(l)
-    elif uc == "load":
-        b = input("Please enter the name of the lab to load: ")
-        try:
-            l = loadLab(b)
-        except:
-            print("Failed ! Do your lab exists ? ")
-    elif uc == "exit":
-        os.system("rm lock")
-        exit(0)
-    else:
-        print("Command not found !")
-    
-    while l != None:
-        print("A lab is loaded ! ")
-        print(l)
-        print("(list, reset, destroy, unload, rebuild, connect, disconnect, exit)")
-        c = input(" >> ").lower()
-
-        if c == "list":
+        if uc == "create":
+            l = createLab()
+        elif uc == "list":
             listLabs(l)
-        elif c == "reset":
-            l.restoreSnapshot()
-        elif c == "destroy":
-            print("Destroying the lab " + l.name)
-            l.destroy()
-            l = None 
-        elif c == "unload":
-            l = None
-        elif c == "exit":
+        elif uc == "load":
+            b = input("Please enter the name of the lab to load: ")
+            try:
+                l = loadLab(b)
+            except:
+                print("Failed ! Do your lab exists ? ")
+        elif uc == "exit":
             os.system("rm lock")
             exit(0)
-        elif c == "connect":
-            l.connectManagementNetwork()
-        elif c == "disconnect":
-            l.disconnectManagementNetwork()
-        elif c == "rebuild":
-            os.chdir("Labs/"+l.name+'/')
-            os.system("terraform destroy -auto-approve")
-            os.chdir("../..")
-            try:
-                l.cleanAnsibleFiles()
-            except:
-                pass
-            print("Running Terraform ...")
-            l.runTerraform()
-            time.sleep(15)
-            print("Creating ansible files...")
-            l.createAnsibleFiles()
-            print("Running ansible...")
-            l.runAnsible()
-            time.sleep(5)
-            print("Done ! Cleaning...")
-            l.cleanAnsibleFiles()
-            print("Disconnecting management network...")
-            l.disconnectManagementNetwork()
-            print("Taking snapshots...")
-            l.takeSnapshot()
-            print("Saving lab...")
-            l.save()
-            print("Creation over, lab created:")
-            print(l)
         else:
             print("Command not found !")
+        
+        while l != None:
+            print("A lab is loaded ! ")
+            print(l)
+            print("(list, reset, destroy, unload, rebuild, connect, disconnect, exit)")
+            c = input(" >> ").lower()
 
+            if c == "list":
+                listLabs(l)
+            elif c == "reset":
+                l.restoreSnapshot()
+            elif c == "destroy":
+                print("Destroying the lab " + l.name)
+                l.destroy()
+                l = None 
+            elif c == "unload":
+                l = None
+            elif c == "exit":
+                os.system("rm lock")
+                exit(0)
+            elif c == "connect":
+                l.connectManagementNetwork()
+            elif c == "disconnect":
+                l.disconnectManagementNetwork()
+            elif c == "rebuild":
+                os.chdir("Labs/"+l.name+'/')
+                os.system("terraform destroy -auto-approve")
+                os.chdir("../..")
+                try:
+                    l.cleanAnsibleFiles()
+                except:
+                    pass
+                print("Running Terraform ...")
+                l.runTerraform()
+                time.sleep(15)
+                print("Creating ansible files...")
+                l.createAnsibleFiles()
+                print("Running ansible...")
+                l.runAnsible()
+                time.sleep(5)
+                print("Done ! Cleaning...")
+                l.cleanAnsibleFiles()
+                print("Disconnecting management network...")
+                l.disconnectManagementNetwork()
+                print("Taking snapshots...")
+                l.takeSnapshot()
+                print("Saving lab...")
+                l.save()
+                print("Creation over, lab created:")
+                print(l)
+            else:
+                print("Command not found !")
+
+if __name__ == "__main__":
+    main()
