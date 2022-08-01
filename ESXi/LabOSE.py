@@ -1,7 +1,6 @@
 # Gestionnaire de Labs - AP
-# chose à faire: copier le HAProxy qui pointe vers .2. pour en faire un qui pointe vers chaque lab
-# tester guacamole avec la construction d'un lab
 
+import datetime
 import os 
 import pickle
 import shutil
@@ -122,7 +121,7 @@ class lab:
             if ordi.type == "logger":
                 fichier.write(ordi.name + ":\n  hosts:\n    "+ordi.dhcpIP+":\n      ansible_user: vagrant\n      ansible_password: vagrant\n      ansible_port: 22\n      ansible_connection: ssh\n      ansible_ssh_common_args: '-o UserKnownHostsFile=/dev/null'\n\n")
                 os.system("rm resources/01-netcfg.yml")
-                importConfigFile("resources/01-netcfgSample.yaml", "resources/01-netcfg.yaml", {"loggerIP":ordi.IP}) # fichier de conf supp. pour le logger
+                importConfigFile("resources/01-netcfgSample.yaml", "resources/01-netcfg.yaml", {"loggerIP":ordi.IP, "mask": self.network.IPmask}) # fichier de conf supp. pour le logger
             else:
                 fichier.write(ordi.name + ":\n  hosts:\n    "+ordi.dhcpIP+":\n\n")
         fichier.close()
@@ -423,6 +422,13 @@ def listLabs(l=None):
         except:
             print("   " + dir)
 
+if os.path.exists("lock"):
+    print("The script did not finish as expected, or someone else is using the script. Two labs cannot be either created or destroyed at the same time, doing so could result in the loss of both labs and a script failure. If you are sure to be the only one using this script, please remove the lock file. In case of a script failure, check configuration files.")
+    raise Exception
+fichier = open("lock", 'w')
+fichier.write(datetime.now().strftime("%H:%M:%S"))
+fichier.close()
+
 print("Hello ! Welcome on labs management console ! ")
 while True:
     l = None
@@ -441,6 +447,7 @@ while True:
         except:
             print("Failed ! Do your lab exists ? ")
     elif uc == "exit":
+        os.system("rm lock")
         exit(0)
     else:
         print("Command not found !")
@@ -462,6 +469,7 @@ while True:
         elif c == "unload":
             l = None
         elif c == "exit":
+            os.system("rm lock")
             exit(0)
         elif c == "connect":
             l.connectManagementNetwork()
