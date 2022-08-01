@@ -6,6 +6,8 @@ import pickle
 import shutil
 import random
 import time
+import secrets
+import string
 from env import * #le fichier env.py est à remplir selon le sample
 
 def generateMacAddress():
@@ -35,6 +37,10 @@ class lab:
         self.computers = []
         self.network = network()
         self.IPcounter = 2 # Va permettre d'associer une IP unique à chaque machine
+
+        self.username = "user_" + name
+        alphabet = string.ascii_letters + string.digits
+        self.pwd = ''.join(secrets.choice(alphabet) for i in range(20))  # for a 20-character password
     
     def addComputer(self, type:str, edr:str):
         # Ajoute un objet ordinateur au Lab mais ne crée pas les fichiers de conf
@@ -208,6 +214,7 @@ class lab:
         # Used to print the lab
         chaine = ""
         chaine += "Lab name: "+ self.name
+        chaine += "\nCredentials: " + self.username + "/" + self.pwd 
         chaine += "\n   Name\t\tIP\t\tEDR\t\tVM's ID"
         for ordi in self.computers:
             chaine += "\n - " + ordi.name + "\t\t" + ordi.IP + "\t\t" + ordi.edr + "\t\t" + str(ordi.ESXiID)
@@ -218,7 +225,7 @@ class lab:
         #That must be done before ansible logger run 
         os.system("rm ../Vagrant/resources/guacamole/user-mapping.xml")
         fichier = open("../Vagrant/resources/guacamole/user-mapping.xml", 'a')
-        fichier.write('<user-mapping>\n    <authorize username="vagrant" password="vagrant">\n')
+        fichier.write('<user-mapping>\n    <authorize username="'+self.username+'" password="'+self.pwd+'">\n')
         for ordi in self.computers:
             if ordi.type == "logger":
                 fichier.write('        <connection name="'+ordi.name+'">\n            <protocol>ssh</protocol>\n            <param name="hostname">'+ordi.IP+'</param>\n            <param name="port">22</param>\n            <param name="username">vagrant</param>\n            <param name="password">vagrant</param>\n        </connection>\n\n')
@@ -401,15 +408,13 @@ def createLab() -> lab:
     l.takeSnapshot()
     print("Saving lab...")
     l.save()
-    print("Creation over, lab created:")
-    print(l)
+    print("Creation over, lab created.")
     return l
 
 def loadLab(name) -> lab:
     with open("Labs/"+name+"/pickleDump", "rb") as fichier:
         l = pickle.load(fichier)
     print("Lab loaded:")
-    print(l)
     return l
 
 def listLabs(l=None):
@@ -500,8 +505,6 @@ def main():
                 l.takeSnapshot()
                 print("Saving lab...")
                 l.save()
-                print("Creation over, lab created:")
-                print(l)
             else:
                 print("Command not found !")
 
