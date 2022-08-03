@@ -1,4 +1,8 @@
 # Gestionnaire de Labs - AP
+# todo user qui lance un script pour reste un lab apres avoir check le mdp
+# préciser que les infos viennent de ce que l'utilisateur a rentrer et pas forcément ce qui existe
+# faire eventuellement fonction de check
+# mettre les type en DB
 
 from datetime import datetime
 import os 
@@ -359,7 +363,6 @@ def createLab() -> lab:
             os.mkdir("Labs/" + name)
         else:
             print("Aborting...")
-            shutil.rmtree("Labs/" + name)
             exit(1)
 
     l = lab(name)
@@ -390,7 +393,7 @@ def createLab() -> lab:
         print("Aborting...")
         shutil.rmtree("Labs/" + name)
 
-        exit(1)
+        return None
 
     print("Running Terraform ...")
     l.runTerraform()
@@ -414,7 +417,6 @@ def createLab() -> lab:
 def loadLab(name) -> lab:
     with open("Labs/"+name+"/pickleDump", "rb") as fichier:
         l = pickle.load(fichier)
-    print("Lab loaded:")
     return l
 
 def listLabs(l=None):
@@ -430,12 +432,12 @@ def listLabs(l=None):
 def main():
     if os.path.exists("lock"):
         print("The script did not finish as expected, or someone else is using the script. Two labs cannot be either created or destroyed at the same time, doing so could result in the loss of both labs and a script failure. If you are sure to be the only one using this script, please remove the lock file. In case of a script failure, check configuration files.")
-        raise Exception
+        exit(1)
     fichier = open("lock", 'w')
     fichier.write(datetime.now().strftime("%H:%M:%S"))
     fichier.close()
 
-    print("Hello ! Welcome on labs management console ! ")
+    print("Hello ! Welcome on labs management console !\nIt's important to exit the script properly, by typing exit.")
     while True:
         l = None
         print("No lab is actually loaded, you can create one, or select an existing one.")
