@@ -228,12 +228,13 @@ class lab:
 
     def __str__(self):
         # Used to print the lab
+        self.test()
         chaine = ""
         chaine += "Lab name: "+ self.name
         chaine += "\nCredentials: " + self.username + "/" + self.pwd 
-        chaine += "\n   Name\t\tIP\t\tEDR\t\tVM's ID"
+        chaine += "\n   Name\t\t\tIP\t\t\tEDR\t\t\tVM's ID\tState\t\tManagement network"
         for ordi in self.computers:
-            chaine += "\n - " + ordi.name + "\t\t" + ordi.IP + "\t\t" + ordi.edr + "\t\t" + str(ordi.ESXiID)
+            chaine += "\n - " + ordi.name + "\t\t" + ordi.IP + "\t\t" + ordi.edr + "\t\t" + str(ordi.ESXiID) + "\t\t" + ordi.state + "\t\t" + ordi.net
         return chaine
 
     def buildGuacamoleConfigFile(self):
@@ -252,6 +253,23 @@ class lab:
         fichier.write("    </authorize>\n</user-mapping>")
         fichier.close()
 
+    def test(self):
+        #Test que les machines existent et sont up
+        for ordi in self.computers:
+            state = os.popen("sshpass -p " + password+ " ssh -o StrictHostKeyChecking=no " + user + "@" + ESXi + " " + "vim-cmd vmsvc/power.getstate " + str(ordi.ESXiID)).read().replace("\n", "")
+            net = os.popen("sshpass -p " + password+ " ssh -o StrictHostKeyChecking=no " + user + "@" + ESXi + " " + "vim-cmd vmsvc/get.guest " + str(ordi.ESXiID) + " | grep 'connected = false'").read().replace("\n", "")
+            if "Powered on" in state:
+                ordi.state="on"
+            elif "Powered off" in state:
+                ordi.state = "off"
+            else:
+                ordi.state = "dead"
+
+            if "connected = false" in net:
+                ordi.net="off"
+            else:
+                ordi.net = "on"
+        
     
 class ordinateur:
     # Classe qui représente un ordinateur du lab
@@ -266,6 +284,8 @@ class ordinateur:
         self.lab = lab
         self.ESXiID = 0 # Va être changé quand il sera connu
         self.dhcpIP = "" # idem
+        self.state = "dead"
+        self.net = "on"
 
     def buildRole(self, dnsIP:str):
         #Construit le rôle associé à la machine à partir des templates
@@ -417,8 +437,7 @@ def main():
     print("Hello ! Welcome on labs management console !\nIt's important to exit the script properly, by typing exit.")
     while True:
         l = None
-        print("No lab is actually loaded, you can create one, or select an existing one.")
-        print("(create / list / load / exit)")
+        print("No lab loaded. (create / list / load / exit)")
         uc = input(" >> ").lower()
 
         if uc == "create":
@@ -438,9 +457,7 @@ def main():
             print("Command not found !")
         
         while l != None:
-            print("A lab is loaded ! ")
-            print(l)
-            print("(list, reset, destroy, unload, rebuild, connect, disconnect, exit)")
+            print("A lab is loaded. (list, reset, destroy, unload, rebuild, connect, disconnect, show, exit)")
             c = input(" >> ").lower()
 
             if c == "list":
@@ -460,6 +477,8 @@ def main():
                 l.connectManagementNetwork()
             elif c == "disconnect":
                 l.disconnectManagementNetwork()
+            elif c == "show":
+                print(l)
             elif c == "rebuild":
                 os.chdir("Labs/"+l.name+'/')
                 os.system("terraform destroy -auto-approve")
