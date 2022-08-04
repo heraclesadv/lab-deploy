@@ -2,3 +2,4 @@ ansible_user: vagrant
 ansible_password: vagrant
 ansible_port: 22
 ansible_connection: ssh
+ansible_ssh_common_args: '-o UserKnownHostsFile=/dev/null'

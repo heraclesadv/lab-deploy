@@ -1,8 +1,8 @@
 # Gestionnaire de Labs - AP
-# todo user qui lance un script pour reste un lab apres avoir check le mdp
+
 # préciser que les infos viennent de ce que l'utilisateur a rentrer et pas forcément ce qui existe
 # faire eventuellement fonction de check
-# mettre les type en DB
+# generate script de connexion avec les id des machines après création du lab, mais attention on peut peut être pas ssh
 
 from datetime import datetime
 import os 
@@ -13,6 +13,7 @@ import time
 import secrets
 import string
 from env import * #le fichier env.py est à remplir selon le sample
+from samples import *
 
 def generateMacAddress():
     # Génère une adresse MAC aléatoirement, les risques de collision sont faibles
@@ -45,6 +46,18 @@ class lab:
         self.username = "user_" + name
         alphabet = string.ascii_letters + string.digits
         self.pwd = ''.join(secrets.choice(alphabet) for i in range(20))  # for a 20-character password
+
+        try:
+            os.mkdir("Labs/" + self.name)
+        except:
+            rep = input("A lab with this name already exists, do you want to override the files ? (y/N) ")
+            if rep == "y" or rep == "Y" or rep =="yes":
+                shutil.rmtree("Labs/" + self.name)
+                os.mkdir("Labs/" + self.name)
+            else:
+                print("Aborting...")
+                exit(1)
+
     
     def addComputer(self, type:str, edr:str):
         # Ajoute un objet ordinateur au Lab mais ne crée pas les fichiers de conf
@@ -59,6 +72,14 @@ class lab:
             if ordi.type == "dc":
                 return ordi.IP.replace("\n", "")
         return "8.8.8.8"
+
+    def getOrdiWithType(self, type):
+        liste = []
+        for ordi in self.computers:
+            if ordi.type == type:
+                liste.append(ordi)
+        return liste
+        
 
     def createTfFiles(self):
         # Crée les fichiers de configuration terraform à partir des modèles dans le dossier terraform
@@ -75,18 +96,8 @@ class lab:
 
         # Pour chaque ordinateur on utilise le sample correspondant:
         for ordi in self.computers:
-            if ordi.type == 'win':
-                importConfigFile("terraform/winSample.tf", "Labs/" + self.name + '/' + ordi.name + '.tf', 
-                    {"name": ordi.name, "MACAddressHostOnly":ordi.macAddressHostOnly, "MACAddressLanPortGroup":ordi.macAddressLanPortGroup})
-            elif ordi.type == 'dc':
-                importConfigFile("terraform/dcSample.tf", "Labs/" + self.name + '/' + ordi.name + '.tf', 
-                    {"name": ordi.name, "MACAddressHostOnly":ordi.macAddressHostOnly, "MACAddressLanPortGroup":ordi.macAddressLanPortGroup})
-            elif ordi.type == 'logger':
-                importConfigFile("terraform/linuxSample.tf", "Labs/" + self.name + '/' + ordi.name + '.tf', 
-                    {"name": ordi.name, "MACAddressHostOnly":ordi.macAddressHostOnly, "MACAddressLanPortGroup":ordi.macAddressLanPortGroup})
-            else:
-                print("Type not found for computer " + ordi.name)
-                exit(1)
+            importConfigFile(TYPES[ordi.type][0], "Labs/" + self.name + '/' + ordi.name + '.tf', 
+                {"name": ordi.name, "MACAddressHostOnly":ordi.macAddressHostOnly, "MACAddressLanPortGroup":ordi.macAddressLanPortGroup})
 
         # On remplit le fichier de configuration:
         importConfigFile("terraform/variableSample.tf", 
@@ -120,20 +131,20 @@ class lab:
 
     def createAnsibleFiles(self):
         # Crée les fichiers de configuration ansible à partir des samples dans ansible/roles/samples et ex nihilo
-
+        self.cleanAnsibleFiles()
         self.buildGuacamoleConfigFile()# fichier de configuration de guacamole qui est téléversé sur le logger par ansible
 
         # On crée ex nihilo le fichier inventory.yml
         os.system("rm ansible/inventory.yml")
         fichier = open("ansible/inventory.yml", 'a')
         self.getDHCPIPs()
-        for ordi in self.computers:
-            if ordi.type == "logger":
-                fichier.write(ordi.name + ":\n  hosts:\n    "+ordi.dhcpIP+":\n      ansible_user: vagrant\n      ansible_password: vagrant\n      ansible_port: 22\n      ansible_connection: ssh\n      ansible_ssh_common_args: '-o UserKnownHostsFile=/dev/null'\n\n")
-                os.system("rm resources/01-netcfg.yml")
-                importConfigFile("resources/01-netcfgSample.yaml", "resources/01-netcfg.yaml", {"loggerIP":ordi.IP, "IPmask": self.network.IPmask + "1"}) # fichier de conf supp. pour le logger
-            else:
-                fichier.write(ordi.name + ":\n  hosts:\n    "+ordi.dhcpIP+":\n\n")
+
+        for type in TYPES:
+            ordis = self.getOrdiWithType(type)
+            hosts= ""
+            for ordi in ordis:
+                hosts += "    "+ordi.dhcpIP+":\n"
+            fichier.write(type + ":\n  hosts:\n" + hosts + '\n')
         fichier.close()
 
         # On crée ex nihilo le fichier detectionlab.yml
@@ -141,7 +152,7 @@ class lab:
         fichier = open("ansible/detectionlab.yml", 'a')
         fichier.write("---\n")
         for ordi in self.computers:
-            fichier.write("- hosts: " + ordi.name)
+            fichier.write("- hosts: " + ordi.dhcpIP)
             fichier.write("\n  roles:\n")
             ordi.buildAnsibleTasks(self.getDNSIP()) # dans cette fonction sont crée les roles à partir des samples
             for role in ordi.roles:
@@ -153,17 +164,18 @@ class lab:
         # Lance les scripts ansible créés ordinateur par ordinateur
         for ordi in self.computers:
             os.chdir("ansible")
-            os.system("ansible-playbook detectionlab.yml --tags \""+ordi.name+"\" --timeout 30")
+            os.system("ansible-playbook detectionlab.yml --tags \""+ordi.name+"\" --timeout 180")
             os.chdir("..")
 
     def cleanAnsibleFiles(self):
-        # Supprime les fichier que l'on vient d'ajouter car il faut éventuellement libèrer la place pour un autre lab
+        # Supprime les fichiers que l'on vient d'ajouter car il faut éventuellement libèrer la place pour un autre lab
         for ordi in self.computers:
-            shutil.rmtree("ansible/roles/" + ordi.name)
+            try:
+                shutil.rmtree("ansible/roles/" + ordi.name)
+            except:
+                pass
         os.system("rm ansible/inventory.yml")
         os.system("rm ansible/detectionlab.yml")
-        os.system("rm resources/01-netcfg.yaml")
-        shutil.rmtree("ansible/roles/commonWinEndpoint")
 
     def destroy(self):
         # Détruit tous les fichiers et efface les modifications faites
@@ -259,42 +271,19 @@ class ordinateur:
         #Construit le rôle associé à la machine à partir des templates
         os.system("mkdir ansible/roles/" + self.name)
         os.system("mkdir ansible/roles/"+self.name+"/tasks")
-        if self.type == "win":
-            importConfigFile("ansible/roles/samples/winSample.yml", "ansible/roles/"+self.name+"/tasks/main.yml", {
-                "name":self.name,
-                "HostOnlyIP": self.IP,
-                "DNSServer": dnsIP,
-                "MACAdressHostOnly": self.macAddressHostOnly.replace(":", "-"),
-                "gateway":self.lab.network.IPmask+"1"
-            })
-        elif self.type == "dc":
-            importConfigFile("ansible/roles/samples/dcSample.yml", "ansible/roles/"+self.name+"/tasks/main.yml", {
-                "name":self.name,
-                "HostOnlyIP": self.IP,
-                "MACAdressHostOnly": self.macAddressHostOnly.replace(":", "-"),
-                "gateway":self.lab.network.IPmask+"1"
-            })
-            os.system("mkdir ansible/roles/commonWinEndpoint")
-            os.system("mkdir ansible/roles/commonWinEndpoint/tasks")
-            importConfigFile("ansible/roles/samples/commonWinEndpointSample.yml", "ansible/roles/commonWinEndpoint/tasks/main.yml", {
-                "DCIP":self.IP
-            }) # on en profite pour construire le rôle commun aux endpoints win, cette sépération est devenue inutile avec le temps
-        elif self.type == "logger":
-            importConfigFile("ansible/roles/samples/loggerSample.yml", "ansible/roles/"+self.name+"/tasks/main.yml", {
-                "name":self.name,
-                "HostOnlyIP": self.IP,
-                "MACAdressHostOnly": self.macAddressHostOnly.replace(":", "-")
-            })
-        else:
-            print("Type not found:" + self.type)
-            exit(1)
+        importConfigFile(TYPES[self.type][1], "ansible/roles/"+self.name+"/tasks/main.yml", {
+            "name":self.name,
+            "HostOnlyIP": self.IP,
+            "DNSServer": dnsIP,
+            "MACAdressHostOnly": self.macAddressHostOnly.replace(":", "-"),
+            "gateway":self.lab.network.IPmask+"1",
+            "DCIP": dnsIP
+        })
 
     def buildAnsibleTasks(self, dnsIP:str):
         # Choisit les rôles ansible à attribuer à chacun des ordinateurs
         self.buildRole(dnsIP)
         self.roles = [self.name]
-        if self.type == "win":
-            self.roles.append("commonWinEndpoint")
 
         if "cybereason" in self.edr:
             self.roles.append("cybereasonWin" if self.type == "dc" or self.type == "win" else "cybereasonUbuntu")
@@ -353,18 +342,6 @@ class network:
 def createLab() -> lab:
 
     name = input("Lab name: ").replace(" ", "")
-
-    try:
-        os.mkdir("Labs/" + name)
-    except:
-        rep = input("A lab with this name already exists, do you want to override the files ? (y/N) ")
-        if rep == "y" or rep == "Y" or rep =="yes":
-            shutil.rmtree("Labs/" + name)
-            os.mkdir("Labs/" + name)
-        else:
-            print("Aborting...")
-            exit(1)
-
     l = lab(name)
 
     a = "start"
@@ -512,3 +489,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

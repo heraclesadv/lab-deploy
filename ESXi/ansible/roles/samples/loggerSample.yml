@@ -18,12 +18,19 @@
     dest: /vagrant/
   become: yes
 
-- name: Copy netplan file
+- name: Create netplan file
   copy:
-    src: ../resources/01-netcfg.yaml
-    dest: /tmp
-    owner: vagrant
-    group: vagrant
+    dest: "/tmp/01-netcfg.yaml"
+    content: |
+      network:
+        version: 2
+        ethernets:
+          eth0:
+            dhcp4: true
+          eth1:
+            dhcp4: false
+            addresses: [<HostOnlyIP>/24]
+            gateway4: <gateway>
 
 - name: Copy the netplan file over as root
   shell: "mv /tmp/01-netcfg.yaml /etc/netplan/01-netcfg.yaml"
