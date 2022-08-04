@@ -1,8 +1,5 @@
 # Gestionnaire de Labs - AP
 
-# préciser que les infos viennent de ce que l'utilisateur a rentrer et pas forcément ce qui existe
-# faire eventuellement fonction de check
-# generate script de connexion avec les id des machines après création du lab, mais attention on peut peut être pas ssh
 
 from datetime import datetime
 import os 
@@ -176,6 +173,7 @@ class lab:
                 pass
         os.system("rm ansible/inventory.yml")
         os.system("rm ansible/detectionlab.yml")
+        self.cleanGuacFiles()
 
     def destroy(self):
         # Détruit tous les fichiers et efface les modifications faites
@@ -244,14 +242,19 @@ class lab:
         fichier = open("../Vagrant/resources/guacamole/user-mapping.xml", 'a')
         fichier.write('<user-mapping>\n    <authorize username="'+self.username+'" password="'+self.pwd+'">\n')
         for ordi in self.computers:
-            if ordi.type == "logger":
-                fichier.write('        <connection name="'+ordi.name+'">\n            <protocol>ssh</protocol>\n            <param name="hostname">'+ordi.IP+'</param>\n            <param name="port">22</param>\n            <param name="username">vagrant</param>\n            <param name="password">vagrant</param>\n        </connection>\n\n')
-            elif ordi.type == "dc":
-                fichier.write('        <connection name="'+ordi.name+' - Domain Admin">\n            <protocol>rdp</protocol>\n            <param name="hostname">'+ordi.IP+'</param>\n            <param name="port">3389</param>\n            <param name="username">administrator</param>\n            <param name="password">vagrant</param>\n            <param name="domain">windomain</param>\n            <param name="create-drive-path">true</param>\n            <param name="enable-drive">true</param>\n            <param name="drive-path">/etc/guacamole/shares/'+ordi.name+'</param>\n            <param name="security">nla</param>\n            <param name="ignore-cert">true</param>\n        </connection>\n\n')
-            else:
-                fichier.write('        <connection name="'+ordi.name+' - Domain User">\n            <protocol>rdp</protocol>\n            <param name="hostname">'+ordi.IP+'</param>\n            <param name="port">3389</param>\n            <param name="username">vagrant</param>\n            <param name="password">vagrant</param>\n            <param name="domain">windomain</param>\n            <param name="create-drive-path">true</param>\n            <param name="enable-drive">true</param>\n            <param name="drive-path">/etc/guacamole/shares/'+ordi.name+'</param>\n            <param name="security">nla</param>\n            <param name="ignore-cert">true</param>\n        </connection>\n\n')
+
+            importConfigFile(TYPES[ordi.type][2], "tmp.xml", {"computerName": ordi.name, "HostOnlyIP": ordi.IP})
+            tmp = open("tmp.xml", 'r')
+            fichier.write(tmp.read())
+            tmp.close()
+            os.system("rm tmp.xml")
+
         fichier.write("    </authorize>\n</user-mapping>")
         fichier.close()
+
+    def cleanGuacFiles(self):
+        os.system("rm tmp.xml")
+        os.system("rm ../Vagrant/resources/guacamole/user-mapping.xml")
 
     def test(self):
         #Test que les machines existent et sont up
@@ -375,7 +378,6 @@ def createLab() -> lab:
     l.addComputer("dc", a)
 
     while True:
-        print(l)
         res = input("Do you want to add a windows pc ? (y/N)")
         if res != "y" and res != "Y" and res != "yes":
             break
