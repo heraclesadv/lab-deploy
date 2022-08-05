@@ -1,5 +1,7 @@
 # Gestionnaire de Labs - AP
-
+# https://github.com/rick51231/ESXi-API/blob/master/esxi_api.sh
+# mieux écrire l'itération user
+# allumer eteindre lab
 
 from datetime import datetime
 import os 
@@ -9,7 +11,7 @@ import random
 import time
 import secrets
 import string
-from env import * #le fichier env.py est à remplir selon le sample
+from env import * #le fichier env.py est à remplir
 from samples import *
 
 def generateMacAddress():
@@ -230,7 +232,7 @@ class lab:
         chaine = ""
         chaine += "Lab name: "+ self.name
         chaine += "\nCredentials: " + self.username + "/" + self.pwd 
-        chaine += "\n   Name\t\t\tIP\t\t\tEDR\t\t\tVM's ID\tState\t\tManagement network"
+        chaine += "\n   Name\t\t\tIP\t\t\tEDR\t\tVM's ID\t\tState\t\tManagement network"
         for ordi in self.computers:
             chaine += "\n - " + ordi.name + "\t\t" + ordi.IP + "\t\t" + ordi.edr + "\t\t" + str(ordi.ESXiID) + "\t\t" + ordi.state + "\t\t" + ordi.net
         return chaine
@@ -362,15 +364,20 @@ class network:
 
 # On passe aux fonctions qui vont exécuter les commandes de l'utilisateur
 
+def ask(question) -> bool:
+    rep = input(question + " (y/N)").lower().replace(" ", "")
+    return rep == "yes" or rep == "y" or rep == "oui" or rep == "o"
+
 def createLab() -> lab:
 
     name = input("Lab name: ").replace(" ", "")
     l = lab(name)
 
-    a = "start"
-    while not a in ["", "cybereason", "harfang"]:
-        a = input("Which EDR for your logger ? (Cybereason, harfang, leave empty for none) ").lower()
-    l.addComputer("logger", a)
+    if ask("Do you want a logger ?"):
+        a = "start"
+        while not a in ["", "cybereason", "harfang"]:
+            a = input("Which EDR for your logger ? (Cybereason, harfang, leave empty for none) ").lower()
+        l.addComputer("logger", a)
 
     a = "start"
     while not a in ["", "cybereason", "harfang"]:
@@ -378,8 +385,7 @@ def createLab() -> lab:
     l.addComputer("dc", a)
 
     while True:
-        res = input("Do you want to add a windows pc ? (y/N)")
-        if res != "y" and res != "Y" and res != "yes":
+        if not ask("Do you want to add a windows pc ?"):
             break
         a = "start"
         while not a in ["", "cybereason", "harfang"]:
@@ -387,11 +393,10 @@ def createLab() -> lab:
         l.addComputer("win", a)
 
     l.createTfFiles()
-    res = input("Files created, go ? (y/N) ")
-    if res != "y" and res != "Y" and res != "yes":
+
+    if not ask("Files created, go ? It's the right moment to edit the terraform files !"):
         print("Aborting...")
         shutil.rmtree("Labs/" + name)
-
         return None
 
     print("Running Terraform ...")
@@ -411,6 +416,7 @@ def createLab() -> lab:
     print("Saving lab...")
     l.save()
     print("Creation over, lab created.")
+    print(l)
     return l
 
 def loadLab(name) -> lab:
@@ -439,28 +445,41 @@ def main():
     print("Hello ! Welcome on labs management console !\nIt's important to exit the script properly, by typing exit.")
     while True:
         l = None
-        print("No lab loaded. (create / list / load / exit)")
-        uc = input(" >> ").lower()
+        print("No lab loaded. (create / list / load / help / exit)")
+        uc = input(" >> ")
+        cs = uc.split(" ")
+        if len(cs) > 1:
+            uc = cs[0]
+        uc = uc.lower()
 
         if uc == "create":
             l = createLab()
         elif uc == "list":
             listLabs(l)
         elif uc == "load":
-            b = input("Please enter the name of the lab to load: ")
+            if len(cs) > 1:
+                b = cs[1]
+            else:
+                b = input("Please enter the name of the lab to load: ")
             try:
+                print(b)
                 l = loadLab(b)
             except:
                 print("Failed ! Do your lab exists ? ")
         elif uc == "exit":
             os.system("rm lock")
             exit(0)
+        elif uc == "help":
+            fichier = open("help.txt", 'r')
+            print(fichier.read())
+            fichier.close()
         else:
             print("Command not found !")
         
         while l != None:
-            print("A lab is loaded. (list, reset, destroy, unload, rebuild, connect, disconnect, show, exit)")
+            print("A lab is loaded. (list, reset, destroy, unload, rebuild, connect, disconnect, show, help, exit)")
             c = input(" >> ").lower()
+            
 
             if c == "list":
                 listLabs(l)
@@ -481,6 +500,10 @@ def main():
                 l.disconnectManagementNetwork()
             elif c == "show":
                 print(l)
+            elif c == "help":
+                fichier = open("help.txt", 'r')
+                print(fichier.read())
+                fichier.close()
             elif c == "rebuild":
                 os.chdir("Labs/"+l.name+'/')
                 os.system("terraform destroy -auto-approve")
@@ -505,6 +528,7 @@ def main():
                 l.takeSnapshot()
                 print("Saving lab...")
                 l.save()
+                print(l)
             else:
                 print("Command not found !")
 
