@@ -1,7 +1,5 @@
 # Gestionnaire de Labs - AP
 # https://github.com/rick51231/ESXi-API/blob/master/esxi_api.sh
-# mieux écrire l'itération user
-# rebuild attention modfi tf, change 
 
 
 from datetime import datetime
@@ -520,6 +518,8 @@ def main():
                     l.cleanAnsibleFiles()
                 except:
                     pass
+                print("Recreating terraform files...")
+                l.createTfFiles()
                 print("Running Terraform ...")
                 l.runTerraform()
                 time.sleep(15)
