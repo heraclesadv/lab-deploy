@@ -1,7 +1,8 @@
 # Gestionnaire de Labs - AP
 # https://github.com/rick51231/ESXi-API/blob/master/esxi_api.sh
 # mieux écrire l'itération user
-# allumer eteindre lab
+# rebuild attention modfi tf, change 
+
 
 from datetime import datetime
 import os 
@@ -189,20 +190,6 @@ class lab:
         except:
             pass
 
-    def disconnectManagementNetwork(self):
-        # A la fin de la construction on déconnecte le réseau de management pour segmenter
-        for ordi in self.computers:
-            if ordi.ESXiID == 0:
-                self.getDHCPIPs()
-                break
-        for ordi in self.computers:
-            self.network.ESXiCmd("vim-cmd vmsvc/device.connection "+ordi.ESXiID+" 4000 0")
-
-    def connectManagementNetwork(self):
-        # Faire l'opération inverse si nécessaire (inutilisé)
-        for ordi in self.computers:
-            self.network.ESXiCmd("vim-cmd vmsvc/device.connection "+ordi.ESXiID+" 4000 1")
-
     def takeSnapshot(self):
         # Prendre une snapshot à la fin de l'installation
         for ordi in self.computers:
@@ -232,9 +219,9 @@ class lab:
         chaine = ""
         chaine += "Lab name: "+ self.name
         chaine += "\nCredentials: " + self.username + "/" + self.pwd 
-        chaine += "\n   Name\t\t\tIP\t\t\tEDR\t\tVM's ID\t\tState\t\tManagement network"
+        chaine += "\n   Name\t\t\tIP\t\t\tEDR\t\tVM's ID\t\tState"
         for ordi in self.computers:
-            chaine += "\n - " + ordi.name + "\t\t" + ordi.IP + "\t\t" + ordi.edr + "\t\t" + str(ordi.ESXiID) + "\t\t" + ordi.state + "\t\t" + ordi.net
+            chaine += "\n - " + ordi.name + "\t\t" + ordi.IP + "\t\t" + ordi.edr + "\t\t" + str(ordi.ESXiID) + "\t\t" + ordi.state 
         return chaine
 
     def buildGuacamoleConfigFile(self):
@@ -262,19 +249,41 @@ class lab:
         #Test que les machines existent et sont up
         for ordi in self.computers:
             state = os.popen("sshpass -p " + password+ " ssh -o StrictHostKeyChecking=no " + user + "@" + ESXi + " " + "vim-cmd vmsvc/power.getstate " + str(ordi.ESXiID)).read().replace("\n", "")
-            net = os.popen("sshpass -p " + password+ " ssh -o StrictHostKeyChecking=no " + user + "@" + ESXi + " " + "vim-cmd vmsvc/get.guest " + str(ordi.ESXiID) + " | grep 'connected = false'").read().replace("\n", "")
             if "Powered on" in state:
                 ordi.state="on"
             elif "Powered off" in state:
                 ordi.state = "off"
             else:
                 ordi.state = "dead"
+    
+    def shutdown(self):
+        for ordi in self.computers:
+            self.network.ESXiCmd("vim-cmd vmsvc/power.shutdown "+ordi.ESXiID)
 
-            if "connected = false" in net:
-                ordi.net="off"
-            else:
-                ordi.net = "on"
-        
+    def powerUp(self):
+        for ordi in self.computers:
+            self.network.ESXiCmd("vim-cmd vmsvc/power.on "+ordi.ESXiID)
+
+    def disconnectVMFromManagementNetwork(self):
+        # should only be run at the end of deployment, reconnection is not possible
+        self.removeTfBaliseTag()
+        os.chdir("Labs/"+self.name+'/')
+        os.system("terraform apply -auto-approve")
+        os.chdir("../..")
+
+    def removeTfBaliseTag(self):
+        for ordi in self.computers:
+            fichier = open("Labs/"+self.name+"/"+ordi.name+".tf",'r')
+            chaine = fichier.read()
+            fichier.close()
+            startIndex = chaine.find("<balise>")
+            endIndex = chaine.rfind("<balise>")
+            if startIndex != -1 and endIndex != -1:
+                chaine = chaine[:startIndex] + chaine[endIndex:]
+                fichier = open("Labs/"+self.name+"/"+ordi.name+".tf",'w')
+                fichier.write(chaine)
+                fichier.close()
+
     
 class ordinateur:
     # Classe qui représente un ordinateur du lab
@@ -290,7 +299,6 @@ class ordinateur:
         self.ESXiID = 0 # Va être changé quand il sera connu
         self.dhcpIP = "" # idem
         self.state = "dead"
-        self.net = "on"
 
     def buildRole(self, dnsIP:str):
         #Construit le rôle associé à la machine à partir des templates
@@ -410,7 +418,8 @@ def createLab() -> lab:
     print("Done ! Cleaning...")
     l.cleanAnsibleFiles()
     print("Disconnecting management network...")
-    l.disconnectManagementNetwork()
+    l.disconnectVMFromManagementNetwork()
+    time.sleep(15)
     print("Taking snapshots...")
     l.takeSnapshot()
     print("Saving lab...")
@@ -477,9 +486,8 @@ def main():
             print("Command not found !")
         
         while l != None:
-            print("A lab is loaded. (list, reset, destroy, unload, rebuild, connect, disconnect, show, help, exit)")
+            print("A lab is loaded. (list, reset, destroy, unload, rebuild, shutdown, power, show, help, exit)")
             c = input(" >> ").lower()
-            
 
             if c == "list":
                 listLabs(l)
@@ -494,10 +502,10 @@ def main():
             elif c == "exit":
                 os.system("rm lock")
                 exit(0)
-            elif c == "connect":
-                l.connectManagementNetwork()
-            elif c == "disconnect":
-                l.disconnectManagementNetwork()
+            elif c == "shutdown":
+                l.shutdown()
+            elif c == "power":
+                l.powerUp()
             elif c == "show":
                 print(l)
             elif c == "help":
@@ -523,7 +531,7 @@ def main():
                 print("Done ! Cleaning...")
                 l.cleanAnsibleFiles()
                 print("Disconnecting management network...")
-                l.disconnectManagementNetwork()
+                l.disconnectVMFromManagementNetwork()
                 print("Taking snapshots...")
                 l.takeSnapshot()
                 print("Saving lab...")

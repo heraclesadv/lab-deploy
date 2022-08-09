@@ -24,13 +24,13 @@ resource "esxi_guest" "<name>" {
       password    = "vagrant"
     }
   }
-
+  # <balise> 
   network_interfaces {
     virtual_network = var.vm_network
     mac_address     = "<MACAddressLanPortGroup>"
     nic_type        = "e1000"
   }
-
+  # <balise>
   network_interfaces {
     virtual_network = var.hostonly_network
     mac_address     = "<MACAddressHostOnly>"
