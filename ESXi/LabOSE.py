@@ -72,6 +72,7 @@ class lab:
         return "8.8.8.8"
 
     def getOrdiWithType(self, type):
+        # retourne tous les ordinateurs avec le type donné, utilisé dans createAnsible Files
         liste = []
         for ordi in self.computers:
             if ordi.type == type:
@@ -137,6 +138,7 @@ class lab:
         fichier = open("ansible/inventory.yml", 'a')
         self.getDHCPIPs()
 
+        # on réunit les ordinateurs par type, car il existe un fichier group_vars par type
         for type in TYPES:
             ordis = self.getOrdiWithType(type)
             hosts= ""
@@ -240,6 +242,7 @@ class lab:
         fichier.close()
 
     def cleanGuacFiles(self):
+        #Supprime le fichier temporaire de conf de guacamole
         os.system("rm tmp.xml")
         os.system("rm ../Vagrant/resources/guacamole/user-mapping.xml")
 
@@ -255,14 +258,17 @@ class lab:
                 ordi.state = "dead"
     
     def shutdown(self):
+        #éteint tous les pc du lab
         for ordi in self.computers:
             self.network.ESXiCmd("vim-cmd vmsvc/power.shutdown "+ordi.ESXiID)
 
     def powerUp(self):
+        #allume tous les pc du lab
         for ordi in self.computers:
             self.network.ESXiCmd("vim-cmd vmsvc/power.on "+ordi.ESXiID)
 
     def disconnectVMFromManagementNetwork(self):
+        # utilise terraform pour supprimer les cartes réseaux (management) des ordinateurs du lab
         # should only be run at the end of deployment, reconnection is not possible
         self.removeTfBaliseTag()
         os.chdir("Labs/"+self.name+'/')
@@ -270,6 +276,8 @@ class lab:
         os.chdir("../..")
 
     def removeTfBaliseTag(self):
+        #fonction utilisées dans la fonction précédente pour modifier les fichiers de conf terraform
+        #supprimer tous les caractères entre les deux tags <balise> d'un fichier
         for ordi in self.computers:
             fichier = open("Labs/"+self.name+"/"+ordi.name+".tf",'r')
             chaine = fichier.read()
@@ -288,7 +296,7 @@ class ordinateur:
     def __init__(self, name:str, type:str, edr:str=None, macAddressHostOnly="", macAddressLanPortGroup="", IP="", lab:lab=None):
         self.name = name
         self.type = type # logger, dc or win
-        self.edr = edr #cybereason or harfang
+        self.edr = edr #cybereason or harfang or s1
         self.roles =  [] #filled by buildAnsibleTasks
         self.macAddressHostOnly = macAddressHostOnly
         self.macAddressLanPortGroup = macAddressLanPortGroup
@@ -320,6 +328,8 @@ class ordinateur:
             self.roles.append("cybereasonWin" if self.type == "dc" or self.type == "win" else "cybereasonUbuntu")
         if "harfang" in self.edr:
             self.roles.append("harfangWin" if self.type == "dc" or self.type == "win" else "harfangUbuntu")
+        if "s1" in self.edr:
+            self.roles.append("sentinelOneWin" if self.type == "dc" or self.type == "win" else "sentinelOneUbuntu")
 
 class network:
     # Est lié à un lab, permet de gérer tous les aspects liés au réseau
@@ -371,6 +381,7 @@ class network:
 # On passe aux fonctions qui vont exécuter les commandes de l'utilisateur
 
 def ask(question) -> bool:
+    #fonction de simplification
     rep = input(question + " (y/N)").lower().replace(" ", "")
     return rep == "yes" or rep == "y" or rep == "oui" or rep == "o"
 
@@ -381,27 +392,28 @@ def createLab() -> lab:
 
     if ask("Do you want a logger ?"):
         a = "start"
-        while not a in ["", "cybereason", "harfang"]:
-            a = input("Which EDR for your logger ? (Cybereason, harfang, leave empty for none) ").lower()
+        while not a in ["", "cybereason", "harfang", "s1"]:
+            a = input("Which EDR for your logger ? (Cybereason, harfang, s1, leave empty for none) ").lower()
         l.addComputer("logger", a)
 
     a = "start"
-    while not a in ["", "cybereason", "harfang"]:
-        a = input("Which EDR for your DC ? (Cybereason, harfang, leave empty for none) ").lower()
+    while not a in ["", "cybereason", "harfang", "s1"]:
+        a = input("Which EDR for your DC ? (Cybereason, harfang, s1, leave empty for none) ").lower()
     l.addComputer("dc", a)
 
     while True:
         if not ask("Do you want to add a windows pc ?"):
             break
         a = "start"
-        while not a in ["", "cybereason", "harfang"]:
-            a = input("Which EDR for your PC ? (Cybereason, harfang, leave empty for none) ").lower()
+        while not a in ["", "cybereason", "harfang", "s1"]:
+            a = input("Which EDR for your PC ? (Cybereason, harfang, s1, leave empty for none) ").lower()
         l.addComputer("win", a)
 
     l.createTfFiles()
 
     if not ask("Files created, go ? It's the right moment to edit the terraform files !"):
         print("Aborting...")
+        l.network.freeHostOnlyNetwork()
         shutil.rmtree("Labs/" + name)
         return None
 

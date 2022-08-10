@@ -12,8 +12,6 @@ Commands with a double star ** can only be executed when no lab is loaded
  - destroy*         : destroy the lab and all the data.
  - unload*          : unload the current loaded lab. (For creating a new lab for instance)
  - rebuild*         : rebuild the loaded lab. Unlike reset, this will destroy the existing computers and rebuild them. Can be quite long.
- - connect*         : connect the loaded lab to the management network, a lab shouldn't stay connected.
- - disconnect*      : disconnect the loaded lab from the management network.
  - show*            : gather and print general information abour the loaded lab.
  - help             : show this help message.
  - exit             : exit the script, this is the only proper way the exit the script.
