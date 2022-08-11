@@ -79,10 +79,7 @@ class lab:
         # Remarque: terraform importe tous les fichiers en .tf présents dans le répertoire
 
         # On commence par cleaner si il y a déjà des fichiers terraform pour pas qu'ils interfèrent
-        test = os.listdir("Labs/" + self.name + '/')
-        for item in test:
-            if item.endswith(".tf"):
-                os.remove(os.path.join("Labs/" + self.name + '/', item))
+        self.cleanTfFiles()
         
         # Rien à modifier sur le header:
         shutil.copyfile("terraform/header.tf", "Labs/" + self.name + "/header.tf")
@@ -106,6 +103,17 @@ class lab:
         # Ces fichiers n'ont pas non plus besoin de modification:
         shutil.copyfile("terraform/versions.tf", "Labs/" + self.name + "/versions.tf")
         shutil.copytree("terraform/.terraform", "Labs/" + self.name + "/.terraform")
+
+    def cleanTfFiles(self):
+        test = os.listdir("Labs/" + self.name + '/')
+        for item in test:
+            if item.endswith(".tf"):
+                os.remove(os.path.join("Labs/" + self.name + '/', item))
+            elif "terraform" in item:
+                try:
+                    os.remove(os.path.join("Labs/" + self.name + '/', item))
+                except:
+                    shutil.rmtree(os.path.join("Labs/" + self.name + '/', item))
 
     def runTerraform(self):
         # Lance terraform, il faut que la fonction précédente ai été exécutée
