@@ -411,7 +411,6 @@ def createLab() -> lab:
     time.sleep(15)
     print("Creating ansible files...")
     l.createAnsibleFiles()
-    input("AAAAAAAAAAAA")
     print("Running ansible...")
     l.runAnsible()
     time.sleep(5)
