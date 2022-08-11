@@ -1,15 +1,12 @@
 # Gestionnaire de Labs - AP
 # https://github.com/rick51231/ESXi-API/blob/master/esxi_api.sh
 
-
 from datetime import datetime
 import os 
 import pickle
 import shutil
 import random
 import time
-import secrets
-import string
 from env import * #le fichier env.py est à remplir
 from samples import *
 
@@ -41,10 +38,6 @@ class lab:
         self.network = network()
         self.IPcounter = 2 # Va permettre d'associer une IP unique à chaque machine
 
-        self.username = "user_" + name
-        alphabet = string.ascii_letters + string.digits
-        self.pwd = ''.join(secrets.choice(alphabet) for i in range(20))  # for a 20-character password
-
         try:
             os.mkdir("Labs/" + self.name)
         except:
@@ -57,9 +50,9 @@ class lab:
                 exit(1)
 
     
-    def addComputer(self, type:str, edr:str):
+    def addComputer(self, roles:str):
         # Ajoute un objet ordinateur au Lab mais ne crée pas les fichiers de conf
-        self.computers.append(ordinateur(self.name+type.capitalize()+str(self.IPcounter), type, edr=edr, macAddressHostOnly=generateMacAddress(),
+        self.computers.append(ordinateur(roles=roles, macAddressHostOnly=generateMacAddress(),
             macAddressLanPortGroup=generateMacAddress(), IP=self.network.IPmask+str(self.IPcounter),
             lab=self))
         self.IPcounter += 1
@@ -67,15 +60,16 @@ class lab:
     def getDNSIP(self):
         # Utile pour remplir certains fichiers de configuration ansible
         for ordi in self.computers:
-            if ordi.type == "dc":
-                return ordi.IP.replace("\n", "")
+            for role in ordi.roles:
+                if role == "createDomain":
+                    return ordi.IP.replace("\n", "")
         return "8.8.8.8"
 
     def getOrdiWithType(self, type):
         # retourne tous les ordinateurs avec le type donné, utilisé dans createAnsible Files
         liste = []
         for ordi in self.computers:
-            if ordi.type == type:
+            if ordi.getType() == type:
                 liste.append(ordi)
         return liste
         
@@ -95,7 +89,7 @@ class lab:
 
         # Pour chaque ordinateur on utilise le sample correspondant:
         for ordi in self.computers:
-            importConfigFile(TYPES[ordi.type][0], "Labs/" + self.name + '/' + ordi.name + '.tf', 
+            importConfigFile(TYPES[ordi.getType()][0], "Labs/" + self.name + '/' + ordi.name + '.tf', 
                 {"name": ordi.name, "MACAddressHostOnly":ordi.macAddressHostOnly, "MACAddressLanPortGroup":ordi.macAddressLanPortGroup})
 
         # On remplit le fichier de configuration:
@@ -155,7 +149,7 @@ class lab:
             fichier.write("- hosts: " + ordi.dhcpIP)
             fichier.write("\n  roles:\n")
             ordi.buildAnsibleTasks(self.getDNSIP()) # dans cette fonction sont crée les roles à partir des samples
-            for role in ordi.roles:
+            for role in ordi.ansibleRoles:
                 fichier.write("    - "+ role + "\n")
             fichier.write("  tags: " + ordi.name + "\n\n")
         fichier.close()
@@ -170,10 +164,12 @@ class lab:
     def cleanAnsibleFiles(self):
         # Supprime les fichiers que l'on vient d'ajouter car il faut éventuellement libèrer la place pour un autre lab
         for ordi in self.computers:
-            try:
-                shutil.rmtree("ansible/roles/" + ordi.name)
-            except:
-                pass
+            for role in ordi.ansibleRoles:
+                if not role in ROLES:
+                    try:
+                        shutil.rmtree("ansible/roles/" + role)
+                    except:
+                        pass
         os.system("rm ansible/inventory.yml")
         os.system("rm ansible/detectionlab.yml")
         self.cleanGuacFiles()
@@ -217,11 +213,10 @@ class lab:
         # Used to print the lab
         self.test()
         chaine = ""
-        chaine += "Lab name: "+ self.name
-        chaine += "\nCredentials: " + self.username + "/" + self.pwd 
-        chaine += "\n   Name\t\t\tIP\t\t\tEDR\t\tVM's ID\t\tState"
+        chaine += "Lab name: "+ self.name + "\n"
+        chaine += "\n   Name\t\t\tIP\t\t\tVM's ID\t\tState"
         for ordi in self.computers:
-            chaine += "\n - " + ordi.name + "\t\t" + ordi.IP + "\t\t" + ordi.edr + "\t\t" + str(ordi.ESXiID) + "\t\t" + ordi.state 
+            chaine += "\n - " + ordi.name + "\t\t" + ordi.IP + "\t\t" + str(ordi.ESXiID) + "\t\t" + ordi.state 
         return chaine
 
     def buildGuacamoleConfigFile(self):
@@ -229,10 +224,10 @@ class lab:
         #That must be done before ansible logger run 
         os.system("rm ../Vagrant/resources/guacamole/user-mapping.xml")
         fichier = open("../Vagrant/resources/guacamole/user-mapping.xml", 'a')
-        fichier.write('<user-mapping>\n    <authorize username="'+self.username+'" password="'+self.pwd+'">\n')
+        fichier.write('<user-mapping>\n    <authorize username="lab" password="lab">\n')
         for ordi in self.computers:
 
-            importConfigFile(TYPES[ordi.type][2], "tmp.xml", {"computerName": ordi.name, "HostOnlyIP": ordi.IP})
+            importConfigFile(TYPES[ordi.getType()][1], "tmp.xml", {"computerName": ordi.name, "HostOnlyIP": ordi.IP})
             tmp = open("tmp.xml", 'r')
             fichier.write(tmp.read())
             tmp.close()
@@ -293,11 +288,10 @@ class lab:
     
 class ordinateur:
     # Classe qui représente un ordinateur du lab
-    def __init__(self, name:str, type:str, edr:str=None, macAddressHostOnly="", macAddressLanPortGroup="", IP="", lab:lab=None):
-        self.name = name
-        self.type = type # logger, dc or win
-        self.edr = edr #cybereason or harfang or s1
-        self.roles =  [] #filled by buildAnsibleTasks
+    def __init__(self,roles:str="", macAddressHostOnly="", macAddressLanPortGroup="", IP="", lab:lab=None):
+        
+        self.roles = roles.split(" ") 
+        self.ansibleRoles = [] #filled by buildAnsibleTasks
         self.macAddressHostOnly = macAddressHostOnly
         self.macAddressLanPortGroup = macAddressLanPortGroup
         self.IP = IP #host only ip
@@ -305,31 +299,32 @@ class ordinateur:
         self.ESXiID = 0 # Va être changé quand il sera connu
         self.dhcpIP = "" # idem
         self.state = "dead"
+        self.name = lab.name + self.getType() + str(len(self.lab.computers))
 
-    def buildRole(self, dnsIP:str):
-        #Construit le rôle associé à la machine à partir des templates
-        os.system("mkdir ansible/roles/" + self.name)
-        os.system("mkdir ansible/roles/"+self.name+"/tasks")
-        importConfigFile(TYPES[self.type][1], "ansible/roles/"+self.name+"/tasks/main.yml", {
-            "name":self.name,
-            "HostOnlyIP": self.IP,
-            "DNSServer": dnsIP,
-            "MACAdressHostOnly": self.macAddressHostOnly.replace(":", "-"),
-            "gateway":self.lab.network.IPmask+"1",
-            "DCIP": dnsIP
-        })
+    def getType(self):
+        for role in self.roles:
+            if role in TYPES:
+                return role
+        return None
 
-    def buildAnsibleTasks(self, dnsIP:str):
+    def buildAnsibleTasks(self, dnsIP:str) -> str:
         # Choisit les rôles ansible à attribuer à chacun des ordinateurs
-        self.buildRole(dnsIP)
-        self.roles = [self.name]
-
-        if "cybereason" in self.edr:
-            self.roles.append("cybereasonWin" if self.type == "dc" or self.type == "win" else "cybereasonUbuntu")
-        if "harfang" in self.edr:
-            self.roles.append("harfangWin" if self.type == "dc" or self.type == "win" else "harfangUbuntu")
-        if "s1" in self.edr:
-            self.roles.append("sentinelOneWin" if self.type == "dc" or self.type == "win" else "sentinelOneUbuntu")
+        for role in self.roles:
+            if ROLES[role][0] == "":
+                self.ansibleRoles.append(role)
+            else:
+                nom = self.name + role
+                os.system("mkdir ansible/roles/" + nom)
+                os.system("mkdir ansible/roles/"+nom+"/tasks")
+                importConfigFile("ansible/roles/samples/"+ROLES[role][0], "ansible/roles/"+nom+"/tasks/main.yml", {
+                    "name":self.name,
+                    "HostOnlyIP": self.IP,
+                    "DNSServer": dnsIP,
+                    "MACAdressHostOnly": self.macAddressHostOnly.replace(":", "-"),
+                    "gateway":self.lab.network.IPmask+"1",
+                    "DCIP": dnsIP
+                })
+                self.ansibleRoles.append(nom)
 
 class network:
     # Est lié à un lab, permet de gérer tous les aspects liés au réseau
@@ -390,24 +385,18 @@ def createLab() -> lab:
     name = input("Lab name: ").replace(" ", "")
     l = lab(name)
 
-    if ask("Do you want a logger ?"):
-        a = "start"
-        while not a in ["", "cybereason", "harfang", "s1"]:
-            a = input("Which EDR for your logger ? (Cybereason, harfang, s1, leave empty for none) ").lower()
-        l.addComputer("logger", a)
-
-    a = "start"
-    while not a in ["", "cybereason", "harfang", "s1"]:
-        a = input("Which EDR for your DC ? (Cybereason, harfang, s1, leave empty for none) ").lower()
-    l.addComputer("dc", a)
-
     while True:
-        if not ask("Do you want to add a windows pc ?"):
+        c = input("add >> ")
+        if c.replace(" ", "") == "":
             break
-        a = "start"
-        while not a in ["", "cybereason", "harfang", "s1"]:
-            a = input("Which EDR for your PC ? (Cybereason, harfang, s1, leave empty for none) ").lower()
-        l.addComputer("win", a)
+        ca = c.split(" ")
+        for d in ca:
+            if not d in ROLES:
+                print("Role "+d+" does not exist, computer not added.")
+                break
+        else:
+            l.addComputer(c)
+            print("Computer added.")
 
     l.createTfFiles()
 
@@ -422,6 +411,7 @@ def createLab() -> lab:
     time.sleep(15)
     print("Creating ansible files...")
     l.createAnsibleFiles()
+    input("AAAAAAAAAAAA")
     print("Running ansible...")
     l.runAnsible()
     time.sleep(5)

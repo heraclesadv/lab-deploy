@@ -1,0 +1,41 @@
+- name: Check if existing directory
+  win_stat:
+    path: 'c:\lab-deploy'
+  register: dir
+
+- name: Git clone repository
+  win_shell: git clone https://github.com/ngasc/lab-deploy.git
+  args:
+    chdir: 'c:\'
+  register: cloning
+  when: not dir.stat.exists
+
+- name: Copy scripts to c:\vagrant
+  win_shell: Copy-Item -Recurse c:\lab-deploy\Vagrant c:\vagrant
+  ignore_errors: true
+
+- name: Making Windows10 Great Again
+  win_shell:  .\\MakeWindows10GreatAgain.ps1
+  args:
+    chdir: 'c:\vagrant\scripts'
+
+- name: Join the Domain
+  win_shell: .\\provision.ps1 <DCIP>
+  args:
+    chdir: 'c:\vagrant\scripts'
+  register: join
+  ignore_errors: true
+
+- debug: msg="{{ join.stdout }}"
+  ignore_errors: true
+
+- name: Update group policy
+  win_shell: "gpupdate /force"
+  ignore_errors: true
+
+- name: Reboot Server
+  win_reboot:
+    msg: "Joined the domain. Rebooting..."
+    pre_reboot_delay: 15
+    reboot_timeout: 600
+    post_reboot_delay: 60
