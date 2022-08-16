@@ -1,7 +1,20 @@
-        <connection name="<computerName>">
+        <connection name="<computerName> - SSH">
             <protocol>ssh</protocol>
             <param name="hostname"><HostOnlyIP></param>
             <param name="port">22</param>
             <param name="username">vagrant</param>
             <param name="password">vagrant</param>
+        </connection>
+        <connection name="<computerName> - RDP">
+            <protocol>rdp</protocol>
+            <param name="hostname"><HostOnlyIP></param>
+            <param name="port">3389</param>
+            <param name="username">vagrant</param>
+            <param name="password">vagrant</param>
+            <param name="domain">windomain</param>
+            <param name="create-drive-path">true</param>
+            <param name="enable-drive">true</param>
+            <param name="drive-path">/etc/guacamole/shares/<computerName></param>
+            <param name="security">tls</param>
+            <param name="ignore-cert">true</param>
         </connection>

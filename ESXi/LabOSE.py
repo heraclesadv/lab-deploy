@@ -1,5 +1,5 @@
 # Gestionnaire de Labs - AP
-# https://github.com/rick51231/ESXi-API/blob/master/esxi_api.sh
+# https://github.com/joefitzgerald/packer-windows/tree/master/answer_files
 
 from datetime import datetime
 import os 

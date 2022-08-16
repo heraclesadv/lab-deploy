@@ -14,6 +14,7 @@ ROLES = {
     "ubuntuDsk": ["ubuntuDskSample.yml"],
 
     "joinDomain": ["joinDomainSample.yml"],
+    "joinADUbuntu": ["joinADUbuntu.yml"],
     "createDomain": ["createDomainSample.yml"],
 
     "guacamole": [""],
