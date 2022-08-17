@@ -1,5 +1,6 @@
 # Gestionnaire de Labs - AP
 # https://github.com/joefitzgerald/packer-windows/tree/master/answer_files
+# on devra sans doute directement passer par packer
 
 from datetime import datetime
 import os 

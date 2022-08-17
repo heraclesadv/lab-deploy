@@ -13,10 +13,14 @@
   register: shn
   shell: |
       hostnamectl set-hostname <name>.windomain.local
-      echo "nameserver <DCIP>" > /etc/resolv.conf
+      chmod 777 /etc/resolvconf/resolv.conf.d/head
+      echo "nameserver <DCIP>" > /etc/resolvconf/resolv.conf.d/head
+      chmod 644 /etc/resolvconf/resolv.conf.d/head
+      resolvconf -u
+      cat /etc/resolv.conf
+      systemctl restart resolvconf
 
 - debug: msg="{{ shn.stdout }}"
-
 
 - name: Joining domain
   args: 
