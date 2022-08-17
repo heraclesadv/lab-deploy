@@ -1,0 +1,81 @@
+{
+    "builders": [
+      {
+        "vnc_over_websocket": true,
+        "insecure_connection": true,
+        "boot_wait": "6m",
+        "boot_command": "",
+        "communicator": "winrm",
+        "disk_size": 61440,
+        "floppy_files": [
+          "{{user `autounattend`}}"
+        ],
+        "guest_os_type": "windows7-64",
+        "keep_registered": true,
+        "headless": false,
+        "iso_url": "{{user `iso_url`}}",
+        "iso_checksum": "B946481697906448E33119D2BB15BF81EBBC7CD6F51B4F9A01856C7C35ACFC65",
+        "shutdown_timeout": "2h",
+        "shutdown_command": "shutdown -s -t 0",
+        "skip_export": true,
+        "remote_datastore": "{{user `esxi_datastore`}}",
+        "remote_host": "{{user `esxi_host`}}",
+        "remote_username": "{{user `esxi_username`}}",
+        "remote_password": "{{user `esxi_password`}}",
+        "remote_type": "esx5",
+        "type": "vmware-iso",
+        "version": 11,
+        "vm_name": "Windows7",
+        "vnc_disable_password": true,
+        "vnc_port_min": 5900,
+        "vnc_port_max": 5980,
+        "vmx_data": {
+          "ethernet0.networkName": "{{user `esxi_network_with_dhcp_and_internet`}}",
+          "memsize": "2048",
+          "numvcpus": "2",
+          "scsi0.virtualDev": "lsisas1068",
+          "tools.syncTime": "0",
+          "time.synchronize.continue": "0",
+          "time.synchronize.restore": "0",
+          "time.synchronize.resume.disk": "0",
+          "time.synchronize.shrink": "0",
+          "time.synchronize.tools.startup": "0",
+          "time.synchronize.tools.enable": "0",
+          "time.synchronize.resume.host": "0"
+        },
+        "winrm_username": "vagrant",
+        "winrm_password": "vagrant",
+        "winrm_timeout": "4h"
+      }
+    ],
+    "provisioners": [
+      {
+        "type": "windows-shell",
+        "remote_path": "/tmp/script.bat",
+        "execute_command": "{{ .Vars }} cmd /c \"{{ .Path }}\"",
+        "scripts": [
+          "../../Packer/scripts/enable-rdp.bat"
+        ]
+      },
+      {
+        "type": "windows-restart"
+      },
+      {
+        "type": "windows-shell",
+        "remote_path": "/tmp/script.bat",
+        "execute_command": "{{ .Vars }} cmd /c \"{{ .Path }}\"",
+        "scripts": [
+          "../../Packer/scripts/set-winrm-automatic.bat"
+        ]
+      }
+    ],
+    "variables": {
+      "esxi_datastore": "",
+      "esxi_host": "",
+      "esxi_username": "",
+      "esxi_password": "",
+      "iso_url": "http://192.168.1.52/win7_sp1_entreprise.iso",
+      "autounattend": "../../Packer/answer_files/7/Autounattend.xml"
+    }
+  }
+  
