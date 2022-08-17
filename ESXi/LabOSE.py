@@ -5,10 +5,12 @@ import random
 import time
 from env import *
 
+
 def generateMacAddress():
     return "02:00:00:%02x:%02x:%02x" % (random.randint(0, 255),
                              random.randint(0, 255),
                              random.randint(0, 255))
+
 
 def importConfigFile(sampleFile:str, destFile:str, options:dict):
     #options = {"name":"logger", "MACAddressHostOnly":"AAA", "MACAddressLanPortGroup":"BBB"}
@@ -65,6 +67,7 @@ class lab:
                 importConfigFile("terraform/linuxSample.tf", "Labs/" + self.name + '/' + ordi.name + '.tf', 
                     {"name": ordi.name, "MACAddressHostOnly":ordi.macAddressHostOnly, "MACAddressLanPortGroup":ordi.macAddressLanPortGroup})
             else:
+                # Que faire si il n'y a pas le bon type? renvoyer vers une doc pour créer le fichier tf?
                 print("Type not found for computer " + ordi.name)
                 raise Exception
 
@@ -253,6 +256,7 @@ def main():
     try:
         os.mkdir("Labs/" + name)
     except:
+        # ça m'a l'air un peu facile d'override un lab.
         rep = input("A lab with this name already exists, do you want to override the files ? (Y/n)")
         if rep == "" or rep == "y" or rep == "Y" or rep =="yes":
             shutil.rmtree("Labs/" + name)
