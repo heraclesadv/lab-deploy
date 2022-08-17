@@ -231,7 +231,6 @@
                     <Order>22</Order>
                     <Description>Disable password expiration for vagrant user</Description>
                 </SynchronousCommand>
-                
             </FirstLogonCommands>
             <ShowWindowsLive>false</ShowWindowsLive>
         </component>

@@ -54,17 +54,7 @@
         "remote_path": "/tmp/script.bat",
         "execute_command": "{{ .Vars }} cmd /c \"{{ .Path }}\"",
         "scripts": [
-          "../../Packer/scripts/enable-rdp.bat"
-        ]
-      },
-      {
-        "type": "windows-restart"
-      },
-      {
-        "type": "windows-shell",
-        "remote_path": "/tmp/script.bat",
-        "execute_command": "{{ .Vars }} cmd /c \"{{ .Path }}\"",
-        "scripts": [
+          "../../Packer/scripts/enable-rdp.bat",
           "../../Packer/scripts/set-winrm-automatic.bat"
         ]
       }
