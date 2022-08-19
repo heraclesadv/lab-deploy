@@ -10,10 +10,10 @@
   when: res.reboot_required
 
 - name: Set HostOnly IP Address
-  win_shell: "If (-not(get-netipaddress | where {$_.IPAddress -eq '<HostOnlyIP>'})) {$adapter = (get-netadapter | where {$_.MacAddress -eq '<MACAdressHostOnly>'}).Name; New-NetIPAddress –InterfaceAlias $adapter –AddressFamily IPv4 -IPAddress <HostOnlyIP> –PrefixLength 24 -DefaultGateway <gateway> } Else { Write-Host 'IP Address Already Created.' }"
-
-- name: Set HostOnly DNS Address
-  win_shell: "$adapter = (get-netadapter | where {$_.MacAddress -eq '<MACAdressHostOnly>'}).Name; Set-DnsClientServerAddress -InterfaceAlias $adapter -ServerAddresses <DNSServer>,8.8.8.8"
+  win_command: netsh int ip set address name="Connexion au réseau local 2" static <HostOnlyIP> 255.255.255.0 <gateway>
+ 
+- name: Set DNS
+  win_command: netsh interface ip set dns name="Connexion au réseau local 2" static <DNSServer> primary
 
 - name: Download git installer from master
   win_get_url:

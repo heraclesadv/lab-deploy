@@ -1,3 +1,4 @@
+# les types sont des roles particulier: ils définissent le type d'ordinateur
 
 TYPES = {
     # [nom, fichier sample terraform, fichier sample ansible]
@@ -8,17 +9,21 @@ TYPES = {
     "win7": ["terraform/win7Sample.tf", "../Vagrant/resources/guacamole/win7Sample.xml"]
 }
 
-ROLES = {
+ROLES = {# chaque role correspond à une fonctionnalité
+
+    #On retrouve les types
     "ubuntu": ["ubuntuServerSample.yml"],
     "dc": ["dcSample.yml"],
     "win10": ["win10Sample.yml"],
     "win7": ["win7Sample.yml"],
     "ubuntuDsk": ["ubuntuDskSample.yml"],
 
+    # Fonctionnalités liées à l'AD
     "joinDomain": ["joinDomainSample.yml"],
     "joinADUbuntu": ["joinADUbuntu.yml"],
     "createDomain": ["createDomainSample.yml"],
 
+    # Fonctionnalités EDR
     "guacamole": [""],
     "cybereasonWin": [""],
     "sentinelOneWin": [""],
