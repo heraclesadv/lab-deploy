@@ -1,0 +1,7 @@
+        <connection name="<computerName>">
+            <protocol>ssh</protocol>
+            <param name="hostname"><HostOnlyIP></param>
+            <param name="port">22</param>
+            <param name="username">vagrant</param>
+            <param name="password">vagrant</param>
+        </connection>

@@ -13,3 +13,5 @@ ESXi/env.py
 ESXi/Labs/*
 ESXi/__pycache__/*
 ESXi/Networks.txt
+Vagrant/resources/guacamole/user-mapping.xml
+lock

@@ -21,12 +21,6 @@ If (!(Test-Path $ProfilePath)) {
   }
 }
 
-# Ping DetectionLab server for usage statistics
-Try {
-  curl -userAgent "DetectionLab-$box" "https://ping.detectionlab.network/$box" -UseBasicParsing | out-null
-} Catch {
-  Write-Host "Unable to connect to ping.detectionlab.network"
-}
 
 Write-Host "$('[{0:HH:mm}]' -f (Get-Date)) Disabling IPv6 on all network adatpers..."
 Get-NetAdapterBinding -ComponentID ms_tcpip6 | ForEach-Object {Disable-NetAdapterBinding -Name $_.Name -ComponentID ms_tcpip6}
@@ -56,10 +50,10 @@ if ($env:COMPUTERNAME -imatch 'vagrant') {
   }
 
   Write-Host "$('[{0:HH:mm}]' -f (Get-Date)) My hostname is $env:COMPUTERNAME"
-  if ($env:COMPUTERNAME.Substring(0,2) -imatch 'dc') {
-    . c:\vagrant\scripts\create-domain.ps1 $ip
+  if ($env:COMPUTERNAME -like '*dc*') {
+    . c:\vagrant\scripts\create-domain.ps1 -ip $ip 
   } else {
-    . c:\vagrant\scripts\join-domain.ps1 $ip
+    . c:\vagrant\scripts\join-domain.ps1 -newDNSServers $ip
   }
 } else {
   Write-Host -fore green "$('[{0:HH:mm}]' -f (Get-Date)) I am domain joined!"

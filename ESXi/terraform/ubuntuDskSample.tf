@@ -5,11 +5,11 @@ resource "esxi_guest" "<name>" {
 
   boot_disk_type = "thin"
 
-  memsize            = "8192"
+  memsize            = "4096"
   numvcpus           = "2"
   resource_pool_name = "/"
   power              = "on"
-  clone_from_vm = "Ubuntu2004"
+  clone_from_vm = "UbuntuDesktop2004"
 
     provisioner "remote-exec" {
     inline = [

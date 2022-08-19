@@ -1,0 +1,61 @@
+- name: Install required packages
+  args: 
+    executable: /bin/bash
+  become: yes
+  shell: |
+      apt update
+      apt -y install realmd libnss-sss libpam-sss sssd sssd-tools adcli samba-common-bin oddjob oddjob-mkhomedir packagekit
+
+- name: Set hostname to <name>.windomain.local
+  args: 
+    executable: /bin/bash
+  become: yes
+  register: shn
+  shell: |
+      hostnamectl set-hostname <name>.windomain.local
+      echo "nameserver <DCIP>" > /etc/resolv.conf
+
+- debug: msg="{{ shn.stdout }}"
+
+
+- name: Joining domain
+  args: 
+    executable: /bin/bash
+  become: yes
+  register: jd
+  shell: |
+      sudo realm discover windomain.local
+      echo "vagrant" | realm join -U administrator windomain.local
+
+- debug: msg="{{ jd.stdout }}"
+
+
+- name: Activate mkhomedir
+  args: 
+    executable: /bin/bash
+  become: yes
+  register: am
+  shell: |
+      sudo bash -c "cat > /usr/share/pam-configs/mkhomedir" <<EOF
+      Name: activate mkhomedir
+      Default: yes
+      Priority: 900
+      Session-Type: Additional
+      Session:
+              required                        pam_mkhomedir.so umask=0022 skel=/etc/skel
+      EOF
+      pam-auth-update --enable mkhomedir
+
+- debug: msg="{{ am.stdout }}"
+
+
+- name: Restarting service
+  args: 
+    executable: /bin/bash
+  become: yes
+  shell: |
+      sudo systemctl restart sssd
+
+
+  
+

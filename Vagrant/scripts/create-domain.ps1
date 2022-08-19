@@ -18,7 +18,7 @@ if ((gwmi win32_computersystem).partofdomain -eq $false) {
   (gc C:\secpol.cfg).replace("PasswordComplexity = 1", "PasswordComplexity = 0") | Out-File C:\secpol.cfg
   secedit /configure /db C:\Windows\security\local.sdb /cfg C:\secpol.cfg /areas SECURITYPOLICY
   rm -force C:\secpol.cfg -confirm:$false
-
+  Write-Host "$('[{0:HH:mm}]' -f (Get-Date)) Using subnet: $subnet"
   # Set administrator password
   $computerName = $env:COMPUTERNAME
   $adminPassword = "vagrant"
@@ -46,7 +46,6 @@ if ((gwmi win32_computersystem).partofdomain -eq $false) {
     -Force:$true
 
   $newDNSServers = "127.0.0.1", "8.8.8.8", "4.4.4.4"
-
   $adapters = Get-WmiObject Win32_NetworkAdapterConfiguration | Where-Object { $_.IPAddress -And ($_.IPAddress).StartsWith($subnet) }
   if ($adapters) {
     Write-Host "$('[{0:HH:mm}]' -f (Get-Date)) Setting DNS"
