@@ -1,8 +1,5 @@
 # Gestionnaire de Labs - AP
-# https://github.com/joefitzgerald/packer-windows/tree/master/answer_files
-# on devra sans doute directement passer par packer
 
-# mettre le fichier dotnet 45 sur le master et le fichier maj 4.0
 # et créer role join doamin
 
 from datetime import datetime

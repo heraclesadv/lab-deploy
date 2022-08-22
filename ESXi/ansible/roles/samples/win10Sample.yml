@@ -1,13 +1,14 @@
 ---
 
+- name: Rearm windows license
+  win_command: slmgr /rearm
+
 - name: Hostname -> <name>
   win_hostname:
     name: <name>
-  register: res
 
 - name: Reboot
   win_reboot:
-  when: res.reboot_required
 
 - name: Set HostOnly IP Address
   win_shell: "If (-not(get-netipaddress | where {$_.IPAddress -eq '<HostOnlyIP>'})) {$adapter = (get-netadapter | where {$_.MacAddress -eq '<MACAdressHostOnly>'}).Name; New-NetIPAddress –InterfaceAlias $adapter –AddressFamily IPv4 -IPAddress <HostOnlyIP> –PrefixLength 24 -DefaultGateway <gateway> } Else { Write-Host 'IP Address Already Created.' }"

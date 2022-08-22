@@ -1,13 +1,14 @@
 ---
 
+- name: Rearm windows license
+  win_command: slmgr /rearm
+
 - name: Hostname -> <name>
   win_hostname:
     name: <name>
-  register: res
 
 - name: Reboot
   win_reboot:
-  when: res.reboot_required
 
 - name: Set HostOnly IP Address
   win_command: netsh int ip set address name="Connexion au réseau local 2" static <HostOnlyIP> 255.255.255.0 <gateway>
