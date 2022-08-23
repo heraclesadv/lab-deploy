@@ -1,8 +1,5 @@
 ---
 
-- name: Rearm windows license
-  win_command: slmgr /rearm
-
 - name: Hostname -> <name>
   win_hostname:
     name: <name>

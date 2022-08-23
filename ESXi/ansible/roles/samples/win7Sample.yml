@@ -1,7 +1,15 @@
 ---
 
 - name: Rearm windows license
-  win_command: slmgr /rearm
+  win_shell: cscript //B "%windir%\system32\slmgr.vbs" /rearmn
+  register: bwaaa
+  ignore_errors: true
+
+- debug: msg="{{ bwaaa.stdout }}"
+- debug: msg="{{ bwaaa.stderr }}"
+
+- name: Reboot
+  win_reboot:
 
 - name: Hostname -> <name>
   win_hostname:
