@@ -1,12 +1,9 @@
 ---
 
-- name: Rearm windows license
-  win_shell: cscript //B "%windir%\system32\slmgr.vbs" /rearmn
-  register: bwaaa
-  ignore_errors: true
-
-- debug: msg="{{ bwaaa.stdout }}"
-- debug: msg="{{ bwaaa.stderr }}"
+- name: Activate windows
+  win_shell: cscript slmgr.vbs /rearm
+  args:
+    chdir: C:\Windows\System32\
 
 - name: Reboot
   win_reboot:

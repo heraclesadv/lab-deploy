@@ -39,3 +39,4 @@
     pre_reboot_delay: 15
     reboot_timeout: 600
     post_reboot_delay: 60
+  ignore_errors: true

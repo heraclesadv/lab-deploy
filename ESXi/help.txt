@@ -16,4 +16,13 @@ Commands with a double star ** can only be executed when no lab is loaded
  - help             : show this help message.
  - exit             : exit the script, this is the only proper way the exit the script.
 
-list, reset, destroy, unload, rebuild, connect, disconnect, show, exit
+Example of sequence of command to build a standard lab:
+ >> create
+ >> LabName
+ >> ubuntu guacamole harfangUbuntu
+ >> dc createDomain harfangWin
+ >> win10 joinDomain cybereasonWin
+ >> 
+ >> y
+
+NB: roles are listed in the sample.py file. Only one type should be given, the script doesn't check user's input.
