@@ -1,6 +1,22 @@
 # Gestionnaire de Labs - AP
 
-# et créer role join doamin
+# KNOWN ISSUES:
+# On ne peut pas se log sur win7 avec guacamole -> passer par la console ESXi
+# on ne peut pas ajouter un supprimer un pc d'un lab
+# Il faudrait ajouter la possibilité de manager un autre pc ajouté à la main
+# Parfois, certain win1à ne parviennent pas à rejoindre le domaine, il suffit de rebuild le lab.
+# --> erreur difficilement reproductible
+
+# REMARQUES SUR LE CODE:
+# La manière de déconnecter les cartes réseau avec terraform est radicale mais pas très propre
+# --> Voir lab.removeTfBaliseTag(), lab.disconnectManagementNetwork()
+# 
+
+# AVENIR DU CODE
+# Interaction utilisateur à revoir
+# Portage sur une infra physique: 
+# --> Devrait bien s'adapter, principal souci: interfacer les machines virtuelles avec le réseau
+
 
 from datetime import datetime
 import os 

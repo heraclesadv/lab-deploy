@@ -46,21 +46,6 @@
 
 - debug: msg="{{ ou_creation.stdout_lines }}"
 
-- name: Configure Powershell Logging GPO
-  win_shell: .\\configure-powershelllogging.ps1
-  args:
-    chdir: 'c:\vagrant\scripts'
-  register: powershell_gpo
-  vars:
-    ansible_become: yes
-    ansible_become_method: runas
-    ansible_become_user: windomain.local\vagrant
-    ansible_become_password: vagrant
-    ansible_become_flags: logon_type=new_credentials logon_flags=netcredentials_only
-  failed_when: "'Exception' in powershell_gpo.stderr"
-
-- debug: msg="{{ powershell_gpo.stdout_lines }}"
-
 - name: Configure Auditing Policy GPO
   win_shell: .\\configure-AuditingPolicyGPOs.ps1
   args:

@@ -4,6 +4,7 @@
             <param name="port">3389</param>
             <param name="username">vagrant</param>
             <param name="password">vagrant</param>
+            <param name="domain">windomain</param>
             <param name="create-drive-path">true</param>
             <param name="enable-drive">true</param>
             <param name="drive-path">/etc/guacamole/shares/<computerName></param>
