@@ -9,12 +9,8 @@ $box = $box.ComputerName.ToString().ToLower()
 Write-Host "$('[{0:HH:mm}]' -f (Get-Date)) Setting timezone to UTC..."
 c:\windows\system32\tzutil.exe /s "UTC"
 
-Write-Host "$('[{0:HH:mm}]' -f (Get-Date)) Checking if Windows evaluation is expiring soon or expired..."
-. c:\vagrant\scripts\fix-windows-expiration.ps1
-
 If (!(Test-Path $ProfilePath)) {
   Write-Host "$('[{0:HH:mm}]' -f (Get-Date)) Disabling the Invoke-WebRequest download progress bar globally for speed improvements." 
-  Write-Host "$('[{0:HH:mm}]' -f (Get-Date)) See https://github.com/PowerShell/PowerShell/issues/2138 for more info"
   New-Item -Path $ProfilePath | Out-Null
   If (!(Get-Content $Profilepath| % { $_ -match "SilentlyContinue" } )) {
     Add-Content -Path $ProfilePath -Value "$ProgressPreference = 'SilentlyContinue'"

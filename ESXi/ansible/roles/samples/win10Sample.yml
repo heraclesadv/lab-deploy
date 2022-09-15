@@ -1,5 +1,13 @@
 ---
 
+- name: Activate windows
+  win_shell: cscript slmgr.vbs /rearm
+  args:
+    chdir: C:\Windows\System32\
+
+- name: Reboot
+  win_reboot:
+
 - name: Hostname -> <name>
   win_hostname:
     name: <name>
