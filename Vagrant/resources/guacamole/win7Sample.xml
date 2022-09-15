@@ -4,9 +4,23 @@
             <param name="port">3389</param>
             <param name="username">vagrant</param>
             <param name="password">vagrant</param>
+            <param name="domain">windomain</param>
             <param name="create-drive-path">true</param>
             <param name="enable-drive">true</param>
             <param name="drive-path">/etc/guacamole/shares/<computerName></param>
+            <param name="security">nla</param>
+            <param name="ignore-cert">true</param>
+        </connection>
+        <connection name="<computerName>_local">
+            <protocol>rdp</protocol>
+            <param name="hostname"><HostOnlyIP></param>
+            <param name="port">3389</param>
+            <param name="username">vagrant</param>
+            <param name="password">vagrant</param>
+            <param name="domain">localhost</param>
+            <param name="create-drive-path">true</param>
+            <param name="enable-drive">true</param>
+            <param name="drive-path">/etc/guacamole/shares/<computerName>_localhost</param>
             <param name="security">nla</param>
             <param name="ignore-cert">true</param>
         </connection>
