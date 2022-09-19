@@ -10,6 +10,16 @@
             <param name="drive-path">/etc/guacamole/shares/<computerName></param>
             <param name="security">nla</param>
             <param name="ignore-cert">true</param>
+            <param name="server-layout">fr-fr-azerty</param>
+            <param name="enable-wallpaper">true</param>
+            <param name="enable-theming">true</param>
+            <param name="enable-font-smoothing">true</param>
+            <param name="enable-full-window-drag">true</param>
+            <param name="enable-desktop-composition">true</param>
+            <param name="enable-menu-animations">true</param>
+            <param name="disable-bitmap-caching">true</param>
+            <param name="disable-offscreen-caching">true</param>
+            <param name="disable-glyph-caching">true</param>
         </connection>
         <connection name="<computerName>_local">
             <protocol>rdp</protocol>
@@ -23,4 +33,14 @@
             <param name="drive-path">/etc/guacamole/shares/<computerName>_localhost</param>
             <param name="security">nla</param>
             <param name="ignore-cert">true</param>
+            <param name="server-layout">fr-fr-azerty</param>
+            <param name="enable-wallpaper">true</param>
+            <param name="enable-theming">true</param>
+            <param name="enable-font-smoothing">true</param>
+            <param name="enable-full-window-drag">true</param>
+            <param name="enable-desktop-composition">true</param>
+            <param name="enable-menu-animations">true</param>
+            <param name="disable-bitmap-caching">true</param>
+            <param name="disable-offscreen-caching">true</param>
+            <param name="disable-glyph-caching">true</param>
         </connection>

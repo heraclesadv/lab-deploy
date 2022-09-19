@@ -34,3 +34,6 @@
 
 - debug: msg="{{ git.stdout }}"
 
+- name: "Set the TimeZone"
+  win_timezone:
+    timezone: "Romance Standard Time"

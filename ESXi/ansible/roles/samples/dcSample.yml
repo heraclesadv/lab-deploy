@@ -32,4 +32,8 @@
     chdir: 'c:\'
   register: git
 
+- name: "Set the TimeZone"
+  win_timezone:
+    timezone: "Romance Standard Time"
+
 

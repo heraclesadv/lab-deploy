@@ -10,4 +10,5 @@
             <param name="drive-path">/etc/guacamole/shares/<computerName></param>
             <param name="security">nla</param>
             <param name="ignore-cert">true</param>
+            <param name="server-layout">fr-fr-azerty</param>
         </connection>

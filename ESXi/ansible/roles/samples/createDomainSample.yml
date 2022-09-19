@@ -111,3 +111,12 @@
   with_items:
     - "wevtutil el | Select-String -notmatch \"Microsoft-Windows-LiveId\" | Foreach-Object {wevtutil cl \"$_\"}"
     - "Set-SmbServerConfiguration -AuditSmb1Access $true -Force"
+
+- name: create domain admin vagrantAdmin
+  community.windows.win_domain_user:
+    name: vagrantAdmin
+    firstname: vagrantAdmin
+    password: vagrant
+    state: present
+    groups:
+      - Domain Admins
