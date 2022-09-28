@@ -52,7 +52,7 @@ class lab:
     def __init__(self, name:str):
         self.name = name.replace(" ", "")
         self.computers = []
-        self.network = network()
+        self.network = network(self.name)
         self.IPcounter = 2 # Va permettre d'associer une IP unique à chaque machine
 
         try:
@@ -353,9 +353,10 @@ class ordinateur:
 
 class network:
     # Est lié à un lab, permet de gérer tous les aspects liés au réseau
-    def __init__(self):
+    def __init__(self,labname:str):
         self.name = ""
         self.IPmask = ""
+        self.labname=labname
         self.getHostOnlyNetwork()
     
     def ESXiCmd(self, command:str):
@@ -371,7 +372,9 @@ class network:
         fichier.close()
         for i in range(len(liste)):
             opts = liste[i].split(" ")
-            if opts[1] == "unused":
+            host_id = ''.join(filter(lambda i: i.isdigit(), opts[0]))
+            lab_id = ''.join(filter(lambda i: i.isdigit(), self.labname))
+            if opts[1] == "unused" and host_id == lab_id:
                 liste[i] = opts[0] + " used " + opts [2]
                 fichier = open("Networks.txt", 'w')
                 fichier.writelines(liste)
@@ -379,7 +382,8 @@ class network:
                 self.name = opts[0]
                 self.IPmask = opts[2].replace("\n", "")
                 return 
-        print("No free HostOnly network, please create one more...")
+        print("No free HostOnly network with this number, please create or free the appropriate one")
+        os.system("rm lock")
         exit(1)
 
     def freeHostOnlyNetwork(self):
