@@ -106,17 +106,29 @@
 
 - debug: msg="{{ taskbar_gpo.stdout_lines }}"
 
+
+- name: Disable password complexity
+  win_shell: |
+    secedit /export /cfg c:\secpol.cfg
+    (gc C:\secpol.cfg).replace('PasswordComplexity = 1', 'PasswordComplexity = 0') | Out-File C:\secpol.cfg 
+    secedit /configure /db c:\windows\security\local.sdb /cfg c:\secpol.cfg /areas SECURITYPOLICY
+    rm -force c:\secpol.cfg -confirm:$false
+    gpupdate /force
+
+- name: Ajouter utilisateur domain admin
+  win_shell: |
+    $PASSWORD = ConvertTo-SecureString -AsPlainText -Force -String 'vagrant'
+    New-ADUser -Name 'vagrantAdmin' -Description 'domainadmin' -Enabled $true -AccountPassword $PASSWORD -ChangePasswordAtLogon $false -PasswordNeverExpires $true
+    Add-ADGroupMember -Identity 'Domain Admins' -Members 'vagrantAdmin'
+
 - name: Configure DC with raw Commands
   win_shell: "{{ item }}"
   with_items:
     - "wevtutil el | Select-String -notmatch \"Microsoft-Windows-LiveId\" | Foreach-Object {wevtutil cl \"$_\"}"
     - "Set-SmbServerConfiguration -AuditSmb1Access $true -Force"
 
-- name: create domain admin vagrantAdmin
-  community.windows.win_domain_user:
-    name: vagrantAdmin
-    firstname: vagrantAdmin
-    password: vagrant
-    state: present
-    groups:
-      - Domain Admins
+- name: "Set the TimeZone"
+  win_timezone:
+    timezone: "Romance Standard Time"
+
+

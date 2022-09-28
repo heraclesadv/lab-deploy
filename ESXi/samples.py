@@ -6,7 +6,8 @@ TYPES = {
     "dc": ["terraform/dcSample.tf", "../Vagrant/resources/guacamole/dcSample.xml"],
     "ubuntu": ["terraform/linuxSample.tf", "../Vagrant/resources/guacamole/ubuntuSample.xml"],
     "ubuntuDsk": ["terraform/ubuntuDskSample.tf", "../Vagrant/resources/guacamole/ubuntuDskSample.xml"],
-    "win7": ["terraform/win7Sample.tf", "../Vagrant/resources/guacamole/win7Sample.xml"]
+    "win7": ["terraform/win7Sample.tf", "../Vagrant/resources/guacamole/win7Sample.xml"],
+    "kali": ["terraform/kaliSample.tf", "../Vagrant/resources/guacamole/kaliSample.xml"]
 }
 
 ROLES = {# chaque role correspond à une fonctionnalité
@@ -17,6 +18,7 @@ ROLES = {# chaque role correspond à une fonctionnalité
     "win10": ["win10Sample.yml"],
     "win7": ["win7Sample.yml"],
     "ubuntuDsk": ["ubuntuDskSample.yml"],
+    "kali": ["kaliSample.yml"],
 
     # Fonctionnalités liées à l'AD
     "joinDomain": ["joinDomainSample.yml"],

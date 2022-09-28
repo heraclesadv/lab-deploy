@@ -33,6 +33,10 @@
   win_shell: "gpupdate /force"
   ignore_errors: true
 
+- name: "Set the TimeZone"
+  win_timezone:
+    timezone: "Romance Standard Time"
+
 - name: Reboot Server
   win_reboot:
     msg: "Joined the domain. Rebooting..."
