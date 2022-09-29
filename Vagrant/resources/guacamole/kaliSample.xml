@@ -5,3 +5,10 @@
             <param name="username">vagrant</param>
             <param name="password">vagrant</param>
         </connection>
+        <connection name="<computerName> - VNC">
+            <protocol>vnc</protocol>
+            <param name="hostname"><HostOnlyIP></param>
+            <param name="port">5901</param>
+            <param name="username">vagrant</param>
+            <param name="password">vagrant</param>
+        </connection>

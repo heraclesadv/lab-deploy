@@ -18,61 +18,28 @@
     dest: /vagrant/
   become: yes
 
-- name: Create netplan file
-  copy:
-    dest: "/tmp/01-netcfg.yaml"
-    content: |
-      network:
-        version: 2
-        ethernets:
-          eth0:
-            dhcp4: true
-          eth1:
-            dhcp4: false
-            addresses: [<HostOnlyIP>/24]
-            gateway4: <gateway>
 
-- name: Copy the netplan file over as root
-  shell: "mv /tmp/01-netcfg.yaml /etc/netplan/01-netcfg.yaml"
+- name: Make eth1 satic
+  shell: "printf 'allow-hotplug eth1\niface eth1 inet static\naddress <HostOnlyIP>\nnetmask 255.255.255.0\ngateway <gateway>\n' | sudo tee -a /etc/network/interfaces"
   become: yes
 
-- name: Apply the new netplan
-  shell: netplan apply
+- name: switch on eth1
+  shell: "sudo ifconfig eth1 up"
   become: yes
 
 
-# The lines below create and apply a new netplan at next startup, because the lan nic will be removed
-# and it tries dhcp on hsot only, which is bad
-- name: Create second netplan file
-  copy:
-    dest: "/tmp/01-netcfg.yaml"
-    content: |
-      network:
-        version: 2
-        ethernets:
-          eth0:
-            dhcp4: false
-            addresses: [<HostOnlyIP>/24]
-            gateway4: <gateway>
-
-- name: Copy the netplan file over as root
-  shell: "mv /tmp/01-netcfg.yaml /etc/netplan/01-netcfg.yaml"
+- name: Make eth0 static
+  shell: "printf 'auto eth0\nallow-hotplug eth0\niface eth0 inet static\naddress <HostOnlyIP>\nnetmask 255.255.255.0\ngateway <gateway>\n' | sudo tee -a /etc/network/interfaces"
   become: yes
 
-- name: Create script
-  copy:
-    dest: "/tmp/startup.sh"
-    content: |
-      netplan apply
-
-- name: Chmod the script
-  shell: "chmod +x /tmp/startup.sh"
+- name: updater etc hosts
+  shell: "printf '127.0.0.1        <name>' | sudo tee -a /etc/hosts"
   become: yes
 
-- name: Add the crontab
-  ansible.builtin.cron:
-    name: "bar"
-    special_time: reboot
-    job: " /tmp/startup.sh"
-    user: root
-  become: true
+- name: add DNS adress
+  shell: "printf 'nameserver <gateway>\n' | sudo tee /etc/resolv.conf"
+  become: yes
+
+- name: change hostname for the pid file of tightVNC
+  shell: "printf '#!/bin/bash\ntouch /home/vagrant/.vnc/<name>:1.pid\n' | sudo tee /usr/bin/vnc_script"
+  become: yes
