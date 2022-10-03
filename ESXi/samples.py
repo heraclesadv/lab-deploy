@@ -25,12 +25,13 @@ ROLES = {# chaque role correspond à une fonctionnalité
     "joinADUbuntu": ["joinADUbuntu.yml"],
     "createDomain": ["createDomainSample.yml"],
 
-    # Fonctionnalités EDR
+    # Fonctionnalités
     "guacamole": [""],
     "cybereasonWin": [""],
     "sentinelOneWin": [""],
     "harfangWin": [""],
     "cybereasonUbuntu": [""],
     "sentinelOneUbuntu": [""],
-    "harfangUbuntu": [""]
+    "harfangUbuntu": [""],
+    "sysmonWin": [""]
 }

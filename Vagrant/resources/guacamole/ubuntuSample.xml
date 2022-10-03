@@ -4,4 +4,6 @@
             <param name="port">22</param>
             <param name="username">vagrant</param>
             <param name="password">vagrant</param>
+            <param name="enable-sftp">true</param>
+            <param name="sftp-disable-download">true</param>
         </connection>

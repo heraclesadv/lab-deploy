@@ -6,7 +6,7 @@ resource "esxi_guest" "<name>" {
   boot_disk_type = "thin"
 
   memsize            = "8192"
-  numvcpus           = "2"
+  numvcpus           = "4"
   resource_pool_name = "/"
   power              = "on"
   clone_from_vm = "Ubuntu2004"

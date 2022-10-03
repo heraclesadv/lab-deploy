@@ -8,6 +8,7 @@
             <param name="create-drive-path">true</param>
             <param name="enable-drive">true</param>
             <param name="drive-path">/etc/guacamole/shares/<computerName>_local</param>
+            <param name="disable-download">true</param>
             <param name="security">nla</param>
             <param name="ignore-cert">true</param>
             <param name="server-layout">fr-fr-azerty</param>
@@ -28,6 +29,7 @@
             <param name="create-drive-path">true</param>
             <param name="enable-drive">true</param>
             <param name="drive-path">/etc/guacamole/shares/<computerName>_domainuser</param>
+            <param name="disable-download">true</param>
             <param name="security">nla</param>
             <param name="ignore-cert">true</param>
             <param name="server-layout">fr-fr-azerty</param>
@@ -48,6 +50,7 @@
             <param name="create-drive-path">true</param>
             <param name="enable-drive">true</param>
             <param name="drive-path">/etc/guacamole/shares/<computerName>_domainadmin</param>
+            <param name="disable-download">true</param>
             <param name="security">nla</param>
             <param name="ignore-cert">true</param>
             <param name="server-layout">fr-fr-azerty</param>
@@ -65,6 +68,7 @@
             <param name="create-drive-path">true</param>
             <param name="enable-drive">true</param>
             <param name="drive-path">/etc/guacamole/shares/<computerName>_autres</param>
+            <param name="disable-download">true</param>
             <param name="security">nla</param>
             <param name="ignore-cert">true</param>
             <param name="server-layout">fr-fr-azerty</param>
