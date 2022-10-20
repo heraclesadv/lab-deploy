@@ -32,6 +32,5 @@ ROLES = {# chaque role correspond à une fonctionnalité
     "harfangWin": [""],
     "cybereasonUbuntu": [""],
     "sentinelOneUbuntu": [""],
-    "harfangUbuntu": [""],
-    "sysmonWin": [""]
+    "harfangUbuntu": [""]
 }

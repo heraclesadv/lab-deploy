@@ -21,6 +21,7 @@
             <param name="disable-bitmap-caching">true</param>
             <param name="disable-offscreen-caching">true</param>
             <param name="disable-glyph-caching">true</param>
+            <param name="resize-method">display-update</param>
         </connection>
         <connection name="<computerName>_DC_DomainUser">
             <protocol>rdp</protocol>
@@ -45,6 +46,7 @@
             <param name="disable-bitmap-caching">true</param>
             <param name="disable-offscreen-caching">true</param>
             <param name="disable-glyph-caching">true</param>
+            <param name="resize-method">display-update</param>
         </connection>
         <connection name="<computerName>_DC_DomainAdmin">
             <protocol>rdp</protocol>
@@ -69,6 +71,7 @@
             <param name="disable-bitmap-caching">true</param>
             <param name="disable-offscreen-caching">true</param>
             <param name="disable-glyph-caching">true</param>
+            <param name="resize-method">display-update</param>
         </connection>
         <connection name="<computerName>_LoginScreen">
             <protocol>rdp</protocol>
@@ -90,5 +93,6 @@
             <param name="disable-bitmap-caching">true</param>
             <param name="disable-offscreen-caching">true</param>
             <param name="disable-glyph-caching">true</param>
+            <param name="resize-method">display-update</param>
         </connection>
         

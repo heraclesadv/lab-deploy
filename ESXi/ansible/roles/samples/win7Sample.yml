@@ -38,3 +38,76 @@
   win_timezone:
     timezone: "Romance Standard Time"
 
+#Process Explorer
+
+- name: Create directory Process Explorer
+  ansible.windows.win_file:
+    path: C:\ProcessExplorer
+    state: directory
+
+- name: Download Process64 from master
+  win_shell: Invoke-WebRequest -Uri http://192.168.1.52/ProcessExplorer/procexp64.exe -OutFile C:\ProcessExplorer\procexp64.exe
+  ignore_errors: true
+
+- name: Download Process from master
+  win_shell: Invoke-WebRequest -Uri http://192.168.1.52/ProcessExplorer/procexp.exe -OutFile C:\ProcessExplorer\procexp.exe
+  ignore_errors: true
+
+- name: Create Shortcut Process on the desk
+  win_shortcut:
+    src: C:\ProcessExplorer\
+    dest: C:\Users\vagrant\Desktop\ProcessExp.lnk
+    icon: C:\ProcessExplorer\procexp.exe,0
+
+#Sysmon
+
+- name: Create directory sysmon
+  ansible.windows.win_file:
+    path: C:\sysmon
+    state: directory
+
+- name: Download sysmon installer from master
+  win_shell: Invoke-WebRequest -Uri http://192.168.1.52/Sysmon/Sysmon64.exe -OutFile C:\sysmon\Sysmon64.exe
+  ignore_errors: true
+
+- name: Download sysmonconfig-export-block from master
+  win_shell: Invoke-WebRequest -Uri http://192.168.1.52/Sysmon/sysmonconfig-export-block.xml -OutFile C:\sysmon\sysmonconfig-export-block.xml
+  ignore_errors: true
+
+- name: Install sysmon64
+  win_shell: C:\sysmon\Sysmon64.exe -accepteula -i C:\sysmon\sysmonconfig-export-block.xml
+  register: output
+  ignore_errors: true
+
+    #7zip
+- name: Create directory 7zip
+  ansible.windows.win_file:
+    path: C:\7zip
+    state: directory
+
+- name: Download 7zip installer from master
+  win_shell: Invoke-WebRequest -Uri http://192.168.1.52/7zip/7zipWin.exe -OutFile C:\7zip\7zip.exe
+  ignore_errors: true
+
+- name: Install 7zip
+  win_command: C:\7zip\7zip.exe /S
+
+  #chrome
+
+- name: Download chrome shell
+  win_shell: '$LocalTempDir = $env:TEMP; $ChromeInstaller = "ChromeInstaller.exe"; (new-object System.Net.WebClient).DownloadFile("http://dl.google.com/chrome/install/375.126/chrome_installer.exe", "$LocalTempDir\$ChromeInstaller"); & "$LocalTempDir\$ChromeInstaller" /silent /install; $Process2Monitor = "ChromeInstaller"; Do { $ProcessesFound = Get-Process | ?{$Process2Monitor -contains $_.Name} | Select-Object -ExpandProperty Name; If ($ProcessesFound) { "Still running: $($ProcessesFound -join ", ")" | Write-Host; Start-Sleep -Seconds 2 } else { rm "$LocalTempDir\$ChromeInstaller" -ErrorAction SilentlyContinue -Verbose } } Until (!$ProcessesFound)'
+  ignore_errors: true
+
+  #Note++
+
+- name: Create directory npp
+  ansible.windows.win_file:
+    path: C:\Install_npp
+    state: directory
+
+- name: Download npp from master
+  win_shell: Invoke-WebRequest -Uri http://192.168.1.52/Install_npp/npp.8.4.6.Installer.x64.exe -OutFile C:\Install_npp/npp.8.4.6.Installer.x64.exe 
+  ignore_errors: true
+
+- name: Install chrome
+  win_command: C:\Install_npp/npp.8.4.6.Installer.x64.exe /S
