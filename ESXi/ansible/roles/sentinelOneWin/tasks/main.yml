@@ -4,7 +4,7 @@
 
 #Ansible thinks the command fails, but it works
 - name: Install SentinelOne Agent
-  win_shell: ".\\sentinel.exe --dont_fail_on_config_preserving_failures -t eyJ1cmwiOiAiaHR0cHM6Ly9hZHZlbnMuc2VudGluZWxvbmUubmV0IiwgInNpdGVfa2V5IjogIjg2ZjNhZDI1MDdkYTQxODQifQ=="
+  win_shell: ".\\sentinel.exe --dont_fail_on_config_preserving_failures -t {{ ansible_token_S1 }}"
   register: output
   ignore_errors: true
 

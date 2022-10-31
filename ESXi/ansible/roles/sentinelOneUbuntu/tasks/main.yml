@@ -5,7 +5,7 @@
   shell: |
     wget "http://192.168.1.52/SentinelOneUbuntu.deb"
     dpkg -i SentinelOneUbuntu.deb
-    /opt/sentinelone/bin/sentinelctl management token set eyJ1cmwiOiAiaHR0cHM6Ly9hZHZlbnMuc2VudGluZWxvbmUubmV0IiwgInNpdGVfa2V5IjogIjg2ZjNhZDI1MDdkYTQxODQifQ==
+    /opt/sentinelone/bin/sentinelctl management token set {{ ansible_token_S1 }}
     /opt/sentinelone/bin/sentinelctl control start
   register: sone
 

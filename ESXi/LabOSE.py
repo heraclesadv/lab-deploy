@@ -4,7 +4,7 @@
 # On ne peut pas se log sur win7 avec guacamole -> passer par la console ESXi
 # on ne peut pas ajouter un supprimer un pc d'un lab
 # Il faudrait ajouter la possibilité de manager un autre pc ajouté à la main
-# Parfois, certain win1à ne parviennent pas à rejoindre le domaine, il suffit de rebuild le lab.
+# Parfois, certain win10 ne parviennent pas à rejoindre le domaine, il suffit de rebuild le lab.
 # --> erreur difficilement reproductible
 
 # REMARQUES SUR LE CODE:
@@ -24,8 +24,10 @@ import pickle
 import shutil
 import random
 import time
-from env import * #le fichier env.py est à remplir
 from samples import *
+from dotenv import load_dotenv
+
+load_dotenv()
 
 def generateMacAddress():
     # Génère une adresse MAC aléatoirement, les risques de collision sont faibles
@@ -109,11 +111,11 @@ class lab:
         # On remplit le fichier de configuration:
         importConfigFile("terraform/variableSample.tf", 
             "Labs/" + self.name + "/variables.tf",
-            {"ESXiIP": ESXi, 
-            "ESXiUser":user, 
-            "ESXiPwd":password,
-            "ESXiDatastore":datastore,
-            "VMNetwork":VMNetwork,
+            {"ESXiIP":  os.getenv('ESXi'), 
+            "ESXiUser":os.getenv('user'), 
+            "ESXiPwd":os.getenv('password'),
+            "ESXiDatastore": os.getenv('datastore'),
+            "VMNetwork":os.getenv('VMNetwork'),
             "HostOnlyNetwork":self.network.name
             })
 
@@ -142,11 +144,11 @@ class lab:
     def getDHCPIPs(self): 
         # Récupère les IPs des ordinateurs du Lab sur le réseau de management (où elles sont attribuées par DHCP), utile pour ansible
         for ordi in self.computers:
-            id = os.popen("sshpass -p " + password+ " ssh -o StrictHostKeyChecking=no " + user + "@" + ESXi + " " + "vim-cmd vmsvc/getallvms | grep \"" + ordi.name + "/" + ordi.name + ".vmx\" | cut -c1-3 | awk '{$1=$1};1'").read().replace("\n", "")
-            IP = os.popen("sshpass -p " + password+ " ssh -o StrictHostKeyChecking=no " + user + "@" + ESXi + " " + "vim-cmd vmsvc/get.guest "+id+" | grep -m 1 '192.168.1.' | sed 's/[^0-9+.]*//g'").read().replace("\n", "")
+            id = os.popen("sshpass -p " + os.getenv('password')+ " ssh -o StrictHostKeyChecking=no " + os.getenv('user') + "@" + os.getenv('ESXi') + " " + "vim-cmd vmsvc/getallvms | grep \"" + ordi.name + "/" + ordi.name + ".vmx\" | cut -c1-3 | awk '{$1=$1};1'").read().replace("\n", "")
+            IP = os.popen("sshpass -p " + os.getenv('password')+ " ssh -o StrictHostKeyChecking=no " + os.getenv('user') + "@" + os.getenv('ESXi') + " " + "vim-cmd vmsvc/get.guest "+id+" | grep -m 1 '192.168.1.' | sed 's/[^0-9+.]*//g'").read().replace("\n", "")
             if IP == '':
                 input("press enter to coninue")
-                IP = os.popen("sshpass -p " + password+ " ssh -o StrictHostKeyChecking=no " + user + "@" + ESXi + " " + "vim-cmd vmsvc/get.guest "+id+" | grep -m 1 '192.168.1.' | sed 's/[^0-9+.]*//g'").read().replace("\n", "")
+                IP = os.popen("sshpass -p " + os.getenv('password')+ " ssh -o StrictHostKeyChecking=no " + os.getenv('user') + "@" + os.getenv('ESXi') + " " + "vim-cmd vmsvc/get.guest "+id+" | grep -m 1 '192.168.1.' | sed 's/[^0-9+.]*//g'").read().replace("\n", "")
                 print("après attente IP:")
                 print(IP)
                 input("press enter to coninue")
@@ -275,7 +277,7 @@ class lab:
     def test(self):
         #Test que les machines existent et sont up
         for ordi in self.computers:
-            state = os.popen("sshpass -p " + password+ " ssh -o StrictHostKeyChecking=no " + user + "@" + ESXi + " " + "vim-cmd vmsvc/power.getstate " + str(ordi.ESXiID)).read().replace("\n", "")
+            state = os.popen("sshpass -p " + os.getenv('password') + " ssh -o StrictHostKeyChecking=no " + os.getenv('user') + "@" + os.getenv('ESXi') + " " + "vim-cmd vmsvc/power.getstate " + str(ordi.ESXiID)).read().replace("\n", "")
             if "Powered on" in state:
                 ordi.state="on"
             elif "Powered off" in state:
@@ -367,8 +369,8 @@ class network:
     
     def ESXiCmd(self, command:str):
         # Exécute une commande sur l'ESXi, utilisée partout
-        print(user + "@" + ESXi + " " + command)
-        os.system("sshpass -p " + password+ " ssh -o StrictHostKeyChecking=no " + user + "@" + ESXi + " " + command)
+        print(os.getenv('user') + "@" + os.getenv('ESXi') + " " + command)
+        os.system("sshpass -p " + os.getenv('password') + " ssh -o StrictHostKeyChecking=no " + os.getenv('user') + "@" + os.getenv('ESXi') + " " + command)
     
     def getHostOnlyNetwork(self):
         # Chosit un des réseaux disponibles dans Networks.txt
@@ -419,7 +421,7 @@ def createLab() -> lab:
 
     name = input("Lab name: ").replace(" ", "")
     l = lab(name)
-
+    l.addComputer("ubuntu guacamole")
     while True:
         c = input("add >> ")
         if c.replace(" ", "") == "":

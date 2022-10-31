@@ -19,12 +19,11 @@ Commands with a double star ** can only be executed when no lab is loaded
 Example of sequence of command to build a standard lab:
  >> create
  >> LabName
- >> ubuntu guacamole harfangUbuntu
+ >> ubuntu harfangUbuntu
  >> dc createDomain harfangWin
  >> win10 joinDomain cybereasonWin
  >> 
  >> y
 
 NB: roles are listed in the sample.py file. Only one type should be given, the script doesn't check user's input.
-Beware ! If present, the guacamole role should be placed on the first computer because the redirection is pointing the 192.168.X.2 address.
 Also createDomain should be placed before any joinDomain.

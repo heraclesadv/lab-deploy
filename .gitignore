@@ -13,5 +13,8 @@ ESXi/env.py
 ESXi/Labs/*
 ESXi/__pycache__/*
 ESXi/Networks.txt
+ESXi/ansible/group_vars/*
 Vagrant/resources/guacamole/user-mapping.xml
 lock
+utilisateurs
+.env
