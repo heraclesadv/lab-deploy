@@ -143,8 +143,9 @@ class lab:
 
     def getDHCPIPs(self): 
         # Récupère les IPs des ordinateurs du Lab sur le réseau de management (où elles sont attribuées par DHCP), utile pour ansible
+        # Si les IDs des machines posent problème, il faut modifier le "cut -c1-4" selon le nombre (ex :"cut -c1-3" pour 100 à 999 ou "cut -c1-5" pour 10000 à 99999)
         for ordi in self.computers:
-            id = os.popen("sshpass -p " + os.getenv('password')+ " ssh -o StrictHostKeyChecking=no " + os.getenv('user') + "@" + os.getenv('ESXi') + " " + "vim-cmd vmsvc/getallvms | grep \"" + ordi.name + "/" + ordi.name + ".vmx\" | cut -c1-3 | awk '{$1=$1};1'").read().replace("\n", "")
+            id = os.popen("sshpass -p " + os.getenv('password')+ " ssh -o StrictHostKeyChecking=no " + os.getenv('user') + "@" + os.getenv('ESXi') + " " + "vim-cmd vmsvc/getallvms | grep \"" + ordi.name + "/" + ordi.name + ".vmx\" | cut -c1-4 | awk '{$1=$1};1'").read().replace("\n", "")
             IP = os.popen("sshpass -p " + os.getenv('password')+ " ssh -o StrictHostKeyChecking=no " + os.getenv('user') + "@" + os.getenv('ESXi') + " " + "vim-cmd vmsvc/get.guest "+id+" | grep -m 1 '192.168.1.' | sed 's/[^0-9+.]*//g'").read().replace("\n", "")
             if IP == '':
                 input("press enter to coninue")
@@ -329,7 +330,7 @@ class ordinateur:
         self.macAddressLanPortGroup = macAddressLanPortGroup
         self.IP = IP #host only ip
         self.lab = lab
-        self.ESXiID = 0 # Va être changé quand il sera connu
+        self.ESXiID = 1500 # Va être changé quand il sera connu
         self.dhcpIP = "" # idem
         self.state = "dead"
         self.name = lab.name + self.getType() + str(len(self.lab.computers))
