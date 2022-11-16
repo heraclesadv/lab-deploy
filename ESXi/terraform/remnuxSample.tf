@@ -1,7 +1,6 @@
 resource "esxi_guest" "<name>" {
   guest_name = "<name>"
   disk_store = var.esxi_datastore
-
   boot_disk_type = "thin"
 
   memsize            = "4096"
