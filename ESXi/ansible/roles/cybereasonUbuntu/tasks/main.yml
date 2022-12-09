@@ -1,12 +1,16 @@
+- name : copy CybereasonLinux.deb
+  become : true
+  copy : 
+    src: ~/Tools/Cybereason/CybereasonLinux.deb
+    dest: /etc/CybereasonLinux.deb
 
 - name: Install Cybereason agent on ubuntu
   args: 
     executable: /bin/bash
   become: yes
   shell: |
-    wget "http://192.168.1.52/CybereasonLinux.deb"
     sudo apt install gdb -y
-    sudo dpkg -i CybereasonLinux.deb
+    sudo dpkg -i /etc/CybereasonLinux.deb
   register: cbrs
 
 - debug: msg="{{ cbrs.stdout }}"

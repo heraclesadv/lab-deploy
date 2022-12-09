@@ -1,10 +1,15 @@
+- name : copy harfangUbuntu.deb
+  become : true
+  copy : 
+    src: ~/Tools/Harfang/harfangUbuntu.deb
+    dest: /etc/harfangUbuntu.deb
+
 - name: Install HarfangLab agent on ubuntu
   args: 
     executable: /bin/bash
   become: yes
   shell: |
-    wget "http://192.168.1.52/harfangUbuntu.deb"
-    DEBIAN_FRONTEND=noninteractive HURUKAI_HOST=639eb439a1003034.hurukai.io HURUKAI_PORT=443 HURUKAI_PROTOCOL=https HURUKAI_KEY={{ ansible_token_harfang }} apt install ./harfangUbuntu.deb
+    DEBIAN_FRONTEND=noninteractive HURUKAI_HOST=639eb439a1003034.hurukai.io HURUKAI_PORT=443 HURUKAI_PROTOCOL=https HURUKAI_KEY={{ ansible_token_harfang }} apt install /etc/harfangUbuntu.deb
   register: hrfg
 
 - debug: msg="{{ hrfg.stdout }}"

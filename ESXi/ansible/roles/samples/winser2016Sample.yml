@@ -1,0 +1,39 @@
+---
+
+- name: Activate windows
+  win_shell: cscript slmgr.vbs /rearm
+  args:
+    chdir: C:\Windows\System32\
+
+- name: Reboot
+  win_reboot:
+
+- name: Hostname -> <name>
+  win_hostname:
+    name: <name>
+
+- name: Reboot
+  win_reboot:
+
+- name: Set HostOnly IP Address
+  win_shell: "If (-not(get-netipaddress | where {$_.IPAddress -eq '<HostOnlyIP>'})) {$adapter = (get-netadapter | where {$_.MacAddress -eq '<MACAdressHostOnly>'}).Name; New-NetIPAddress –InterfaceAlias $adapter –AddressFamily IPv4 -IPAddress <HostOnlyIP> –PrefixLength 24 -DefaultGateway <gateway> } Else { Write-Host 'IP Address Already Created.' }"
+
+- name: Set DNS Address
+  win_shell: "$adapter = (get-netadapter | where {$_.MacAddress -eq '<MACAdressHostOnly>'}).Name; Set-DnsClientServerAddress -InterfaceAlias $adapter -ServerAddresses <DNSServer>,8.8.8.8"
+
+- name: Download git installer from master
+  win_get_url:
+    url: http://192.168.1.52/gitWin64.exe
+    dest: 'C:\gitWin64.exe'
+
+- name: Install git
+  win_shell: .\gitWin64.exe /SILENT 
+  args:
+    chdir: 'c:\'
+  register: git
+
+- name: "Set the TimeZone"
+  win_timezone:
+    timezone: "Romance Standard Time"
+
+

@@ -1,0 +1,23 @@
+- name: rm file
+  args: 
+    executable: /bin/bash
+  become: yes
+  shell: | 
+    sudo rm /etc/guacamole/user-mapping.xml
+  register: rmuser
+
+- name : copy user-mapping.xml
+  become : true
+  copy : 
+    src: ~/DetectionLab/Vagrant/resources/guacamole/user-mapping.xml
+    dest: /etc/guacamole/user-mapping.xml
+
+- name: actualise file user-mapping
+  args: 
+    executable: /bin/bash
+  become: yes
+  shell: | 
+    sudo systemctl restart guacd
+    sudo systemctl restart tomcat9
+  register: rest
+  

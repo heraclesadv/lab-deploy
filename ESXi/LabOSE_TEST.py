@@ -26,6 +26,7 @@ import random
 import time
 from samples import *
 from dotenv import load_dotenv
+from pathlib import Path
 
 load_dotenv()
 
@@ -392,7 +393,7 @@ class network:
                 self.IPmask = opts[2].replace("\n", "")
                 return 
         print("No free HostOnly network with this number, please create or free the appropriate one")
-        os.system("rm lock")
+        os.system("rm lock_test")
         exit(1)
 
     def freeHostOnlyNetwork(self):
@@ -465,6 +466,9 @@ def createLab() -> lab:
     print(l)
     return l
 
+
+
+
 def loadLab(name) -> lab:
     with open("Labs/"+name+"/pickleDump", "rb") as fichier:
         l = pickle.load(fichier)
@@ -481,10 +485,10 @@ def listLabs(l=None):
             print("   " + dir)
 
 def main():
-    if os.path.exists("lock"):
-        print("The script did not finish as expected, or someone else is using the script. Two labs cannot be either created or destroyed at the same time, doing so could result in the loss of both labs and a script failure. If you are sure to be the only one using this script, please remove the lock file. In case of a script failure, check configuration files.")
+    if os.path.exists("lock_test"):
+        print("The script did not finish as expected, or someone else is using the script. Two labs cannot be either created or destroyed at the same time, doing so could result in the loss of both labs and a script failure. If you are sure to be the only one using this script, please remove the lock_test file. In case of a script failure, check configuration files.")
         exit(1)
-    fichier = open("lock", 'w')
+    fichier = open("lock_test", 'w')
     fichier.write(datetime.now().strftime("%H:%M:%S"))
     fichier.close()
 
@@ -513,7 +517,7 @@ def main():
             except:
                 print("Failed ! Do your lab exists ? ")
         elif uc == "exit":
-            os.system("rm lock")
+            os.system("rm lock_test")
             exit(0)
         elif uc == "help":
             fichier = open("help.txt", 'r')
@@ -523,7 +527,7 @@ def main():
             print("Command not found !")
         
         while l != None:
-            print("A lab is loaded. (list, reset, destroy, unload, rebuild, shutdown, power, show, help, exit)")
+            print("A lab is loaded. (list, reset, destroy, add, unload, rebuild, shutdown, power, show, help, exit)")
             c = input(" >> ").lower()
 
             if c == "list":
@@ -537,7 +541,7 @@ def main():
             elif c == "unload":
                 l = None
             elif c == "exit":
-                os.system("rm lock")
+                os.system("rm lock_test")
                 exit(0)
             elif c == "shutdown":
                 l.shutdown()
@@ -576,10 +580,128 @@ def main():
                 print("Saving lab...")
                 l.save()
                 print(l)
+            elif c =="add":
+                
+                while True:
+                    c = input("add >> ")
+                    if c.replace(" ", "") == "":
+                        break
+                    ca = c.split(" ")
+                    for d in ca:
+                        if not d in ROLES:
+                            print("Role "+d+" does not exist, computer not added.")
+                            break
+                    else:
+                        l.addComputer(c)
+                        print("Computer added.")
+                print("Recreating terraform files...")
+
+                os.mkdir("Labs/" + l.name + '_add/')
+                shutil.copyfile("terraform/header.tf", "Labs/" + l.name + "_add/header.tf")
+                # Pour chaque ordinateur on utilise le sample correspondant pour les ordinateurs non existants et on le copy dans le dossier "_add":
+                listNewComp = []
+                for ordi in l.computers:
+                    filename = 'Labs/' + l.name + '/' + ordi.name + '.tf'
+                    
+                    if not os.path.exists(filename) :
+                        importConfigFile(TYPES[ordi.getType()][0], "Labs/" + l.name + '/' + ordi.name + '.tf', 
+                            {"name": ordi.name, "MACAddressHostOnly":ordi.macAddressHostOnly, "MACAddressLanPortGroup":ordi.macAddressLanPortGroup})
+                        shutil.copyfile("Labs/" + l.name + '/' + ordi.name + '.tf', "Labs/" + l.name + '_add/' + ordi.name + '.tf')
+                        listNewComp.append(ordi.name)
+
+                # On remplit le fichier de configuration:
+                importConfigFile("terraform/variableSample.tf", 
+                    "Labs/" + l.name + "_add/variables.tf",
+                    {"ESXiIP":  os.getenv('ESXi'), 
+                    "ESXiUser":os.getenv('user'), 
+                    "ESXiPwd":os.getenv('password'),
+                    "ESXiDatastore": os.getenv('datastore'),
+                    "VMNetwork":os.getenv('VMNetwork'),
+                    "HostOnlyNetwork":l.network.name
+                    })
+
+                # Ces fichiers n'ont pas non plus besoin de modification:
+                shutil.copyfile("terraform/versions.tf", "Labs/" + l.name + "_add/versions.tf")
+                shutil.copytree("terraform/.terraform", "Labs/" + l.name + "_add/.terraform")
+
+                if not ask("Files created, go ? It's the right moment to edit the terraform files !"):
+                    print("Aborting...")
+                    l.network.freeHostOnlyNetwork()
+                    shutil.rmtree("Labs/" + l.name +"_event")
+                    return None
+                               
+                print("Running Terraform ...")
+                os.chdir("Labs/"+l.name+'_add/')
+                os.system("terraform init")
+                os.system("terraform apply -auto-approve")
+                os.chdir("../..")
+                time.sleep(15)
+                print("Creating ansible files...")
+                
+                # Crée les fichiers de configuration ansible à partir des samples dans ansible/roles/samples et ex nihilo
+                l.cleanAnsibleFiles()
+                l.buildGuacamoleConfigFile()# fichier de configuration de guacamole qui est téléversé sur le logger par ansible
+                # On crée ex nihilo le fichier inventory.yml
+                os.system("rm ansible/inventory.yml")
+                fichier = open("ansible/inventory.yml", 'a')
+
+                for ordi in l.computers:
+                    id = os.popen("sshpass -p " + os.getenv('password')+ " ssh -o StrictHostKeyChecking=no " + os.getenv('user') + "@" + os.getenv('ESXi') + " " + "vim-cmd vmsvc/getallvms | grep \"" + ordi.name + "/" + ordi.name + ".vmx\" | cut -c1-4 | awk '{$1=$1};1'").read().replace("\n", "")
+                    IP = os.popen("sshpass -p " + os.getenv('password')+ " ssh -o StrictHostKeyChecking=no " + os.getenv('user') + "@" + os.getenv('ESXi') + " " + "vim-cmd vmsvc/get.guest "+id+" | grep -m 1 '192.168.' | sed 's/[^0-9+.]*//g'").read().replace("\n", "")
+                    ordi.ESXiID = id
+                    ordi.dhcpIP = IP 
+
+                # on réunit les ordinateurs par type, car il existe un fichier group_vars par type
+                for type in TYPES:
+                    ordis = l.getOrdiWithType(type)
+                    hosts= ""
+                    for ordi in ordis:
+                        hosts += "    "+ordi.dhcpIP+":\n"
+                    fichier.write(type + ":\n  hosts:\n" + hosts + '\n')
+                fichier.close()
+
+                # On crée ex nihilo le fichier detectionlab.yml
+                os.system("rm ansible/detectionlab.yml")
+                fichier = open("ansible/detectionlab.yml", 'a')
+                fichier.write("---\n")
+                guacaComp=l.name+"ubuntu0"
+                for ordi in l.computers:
+                    if ordi.name == guacaComp:
+                        fichier.write("- hosts: " + ordi.dhcpIP)
+                        fichier.write("\n  roles:\n")
+                        ordi.buildAnsibleTasks(l.getDNSIP()) # dans cette fonction sont crée les roles à partir des samples
+                        fichier.write("    - "+ "guacamoleActualise" + "\n")
+                        fichier.write("  tags: " + ordi.name + "\n\n")
+                    elif ordi.name in listNewComp :
+                        fichier.write("- hosts: " + ordi.dhcpIP)
+                        fichier.write("\n  roles:\n")
+                        ordi.buildAnsibleTasks(l.getDNSIP()) # dans cette fonction sont crée les roles à partir des samples
+                        for role in ordi.ansibleRoles:
+                            fichier.write("    - "+ role + "\n")
+                        fichier.write("  tags: " + ordi.name + "\n\n")
+                fichier.close()
+                input("reegarder fichier detectionlab.yml et inventory.yml")
+                print("Running ansible...")
+                # Lance les scripts ansible créés ordinateur par ordinateur
+                for ordi in l.computers:
+                    os.chdir("ansible")
+                    os.system("ansible-playbook detectionlab.yml --tags \""+ordi.name+"\" --timeout 180")
+                    os.chdir("..")
+                time.sleep(5)
+                print("Done ! Cleaning...")
+                l.cleanAnsibleFiles()
+                print("Disconnecting management network...")
+                l.disconnectVMFromManagementNetwork()
+                print("Taking snapshots...")
+                l.takeSnapshot()
+                print("Saving lab...")
+                l.save()
+                print(l)  
+                shutil.rmtree("Labs/" + l.name + '_add/') 
+
             else:
                 print("Command not found !")
 
 if __name__ == "__main__":
     main()
 
-    

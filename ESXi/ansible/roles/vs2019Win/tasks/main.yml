@@ -1,0 +1,12 @@
+- name : Download vs2019 installer from master
+  win_copy : 
+    src: ~/Tools/Vs2019/vs2019_community_win.exe
+    dest: C:\vs2019_community_win.exe
+
+- name: Install vs2019 Agent
+  win_shell: "C:\\vs2019_community_win.exe --installPath C:\\VS2019 --addProductLang fr-FR --add Microsoft.VisualStudio.Workload.ManagedDesktop --includeRecommended --quiet --wait --norestart"
+  register: output
+  ignore_errors: true
+
+- debug: msg="{{ output.stdout }}"
+- debug: msg="{{ output.stderr }}"

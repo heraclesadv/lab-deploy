@@ -21,6 +21,7 @@
             <param name="security">tls</param>
             <param name="ignore-cert">true</param>
             <param name="server-layout">fr-fr-azerty</param>
+            <param name="resize-method">display-update</param>
         </connection>
 
 

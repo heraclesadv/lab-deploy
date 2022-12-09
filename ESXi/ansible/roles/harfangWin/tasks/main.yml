@@ -1,9 +1,10 @@
-- name: Download Harfang installer from master
-  win_shell: "Invoke-WebRequest -Uri http://192.168.1.52/harfangWin.msi -OutFile harfang.msi"
-  ignore_errors: true
+- name : Download Harfang installer from master
+  win_copy : 
+    src: ~/Tools/Harfang/harfangWin.msi
+    dest: C:\harfangWin.msi
 
 - name: Install Harfang Agent
-  win_shell: "msiexec /qn /i harfang.msi HOST=639eb439a1003034.hurukai.io PORT=443 PROTO=https KEY={{ ansible_token_harfang }}"
+  win_shell: "msiexec /qn /i C:\\harfangWin.msi HOST=639eb439a1003034.hurukai.io PORT=443 PROTO=https KEY={{ ansible_token_harfang }}"
   register: output
   ignore_errors: true
 

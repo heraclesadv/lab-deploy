@@ -1,9 +1,10 @@
-- name: Download Cybereason installer from master
-  win_shell: "Invoke-WebRequest -Uri http://192.168.1.52/CybereasonWindows.exe -OutFile CybereasonWindows.exe"
-  ignore_errors: true
+- name : Download Cybereason installer from master
+  win_copy : 
+    src: ~/Tools/Cybereason/CybereasonWindows.exe
+    dest: C:\CybereasonWindows.exe
 
 - name: Install Cybereason Agent
-  win_shell: ".\\CybereasonWindows.exe /install /quiet /norestart "
+  win_shell: "C:\\CybereasonWindows.exe /install /quiet /norestart "
   register: output
   ignore_errors: true
 
