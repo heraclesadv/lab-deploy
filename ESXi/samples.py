@@ -9,7 +9,8 @@ TYPES = {
     "ubuntuDsk": ["terraform/ubuntuDskSample.tf", "../Vagrant/resources/guacamole/ubuntuDskSample.xml"],
     "win7": ["terraform/win7Sample.tf", "../Vagrant/resources/guacamole/win7Sample.xml"],
     "kali": ["terraform/kaliSample.tf", "../Vagrant/resources/guacamole/kaliSample.xml"],
-    "remnux": ["terraform/remnuxSample.tf", "../Vagrant/resources/guacamole/remnuxSample.xml"]
+    "remnux": ["terraform/remnuxSample.tf", "../Vagrant/resources/guacamole/remnuxSample.xml"],
+    "centos7": ["terraform/centos7.tf", "../Vagrant/resources/guacamole/centos7Sample.xml"],
 }
 
 ROLES = {# chaque role correspond à une fonctionnalité
@@ -23,6 +24,7 @@ ROLES = {# chaque role correspond à une fonctionnalité
     "ubuntuDsk": ["ubuntuDskSample.yml"],
     "kali": ["kaliSample.yml"],
     "remnux": ["remnuxSample.yml"],
+    "centos7": ["centos7.yml"],
 
     # Fonctionnalités liées à l'AD
     "joinDomain": ["joinDomainSample.yml"],
