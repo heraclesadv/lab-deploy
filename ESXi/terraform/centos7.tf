@@ -1,7 +1,7 @@
 resource "esxi_guest" "<name>" {
   guest_name = "<name>"
   disk_store = var.esxi_datastore
-  guestos    = "CentOS 4/5/6/7 (64 bits)"
+  guestos    = "centos7-64"
 
   boot_disk_type = "thin"
 
