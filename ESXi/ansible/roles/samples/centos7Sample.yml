@@ -39,6 +39,6 @@
   become: yes
 
 - name: Apply new network config
-  shell: nmcli con reload
+  shell: sudo nmcli con reload
   become: yes
 
