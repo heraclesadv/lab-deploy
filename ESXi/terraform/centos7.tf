@@ -13,9 +13,10 @@ resource "esxi_guest" "<name>" {
 
     provisioner "remote-exec" {
     inline = [
-      "sudo ifconfig ens160 up && echo 'ens160 up' || echo 'unable to bring ens160 interface up"
+      "sudo ifconfig eth0 up && echo 'eth0 up' || echo 'unable to bring eth0 interface up",
+      "sudo ifconfig eth1 up && echo 'eth1 up' || echo 'unable to bring eth1 interface up"
     ]
-
+    
     connection {
       host        = self.ip_address
       type        = "ssh"
