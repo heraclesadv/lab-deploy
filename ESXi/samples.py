@@ -24,7 +24,7 @@ ROLES = {# chaque role correspond à une fonctionnalité
     "ubuntuDsk": ["ubuntuDskSample.yml"],
     "kali": ["kaliSample.yml"],
     "remnux": ["remnuxSample.yml"],
-    "centos7": ["centos7.yml"],
+    "centos7": ["centos7Sample.yml"],
 
     # Fonctionnalités liées à l'AD
     "joinDomain": ["joinDomainSample.yml"],
