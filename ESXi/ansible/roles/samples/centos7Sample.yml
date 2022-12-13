@@ -18,7 +18,7 @@
 
 - name: Create network script
   copy:
-    dest: "/tmp/ifcfg-ens160"
+    dest: "/tmp/ifcfg-ens35"
     content: |
       TYPE="Ethernet"
         PROXY_METHOD="none"
@@ -29,17 +29,16 @@
         NETMASK=255.255.255.0
         GATEWAY=<gateway>
         IPV6INIT="no"
-        NAME="ens160"
+        NAME="ens35"
         UUID="1a1f5780-52ed-4c0A-b4b1-d9d564446df2"
-        DEVICE="ens160"
+        DEVICE="ens35"
         ONBOOT="yes"
 
 - name: Copy file over as root
-  shell: "mv /tmp/ifcfg-ens160 /etc/sysconfig/network-scripts/ifcfg-ens160"
+  shell: "mv /tmp/ifcfg-ens35 /etc/sysconfig/network-scripts/ifcfg-ens35"
   become: yes
 
 - name: Apply new network config
   shell: nmcli con reload
   become: yes
 
-  
