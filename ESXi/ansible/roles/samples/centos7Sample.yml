@@ -17,7 +17,7 @@
   become: yes
 
 - name: Create network script
-  shell: sudo echo -e 'TYPE="Ethernet" \nPROXY_METHOD="none" \nBROWSER_ONLY="no" \nBOOTPROTO="static" \nDEFROUTE="yes" \nIPADDR=<HostOnlyIP> \nNETMASK=255.255.255.0 \nGATEWAY=<gateway> \nIPV6INIT="no" \nNAME="ens35" \nUUID="1a1f5780-52ed-4c0A-b4b1-d9d564446df2" \nDEVICE="ens35" \nONBOOT="yes"' > /tmp/ifcfg-ens35
+  shell: sudo echo -e 'TYPE="Ethernet" \nPROXY_METHOD="none" \nBROWSER_ONLY="no" \nBOOTPROTO="static" \nDEFROUTE="yes" \nIPADDR=<HostOnlyIP> \nNETMASK=255.255.255.0 \nGATEWAY=<gateway> \nIPV6INIT="yes" \nNAME="ens35" \nUUID="1a1f5780-52ed-4c0A-b4b1-d9d564446df2" \nDEVICE="ens35" \nONBOOT="yes"' > /tmp/ifcfg-ens35
 
 - name: Copy file over as root
   shell: "mv /tmp/ifcfg-ens35 /etc/sysconfig/network-scripts/ifcfg-ens35"
