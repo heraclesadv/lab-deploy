@@ -527,7 +527,7 @@ def main():
             print("Command not found !")
         
         while l != None:
-            print("A lab is loaded. (list, reset, destroy, add, unload, rebuild, shutdown, power, show, help, exit)")
+            print("A lab is loaded. (list, reset, destroy, add, addrole, unload, rebuild, shutdown, power, show, help, exit)")
             c = input(" >> ").lower()
 
             if c == "list":
@@ -581,7 +581,11 @@ def main():
                 l.save()
                 print(l)
             elif c =="add":
-                
+                ###################################################################################
+                ###################################################################################
+                ###################################################################################
+                ###################################################################################
+                ###################################################################################
                 while True:
                     c = input("add >> ")
                     if c.replace(" ", "") == "":
@@ -644,6 +648,102 @@ def main():
                 # On crée ex nihilo le fichier inventory.yml
                 os.system("rm ansible/inventory.yml")
                 fichier = open("ansible/inventory.yml", 'a')
+                guacaComp=l.name+"ubuntu0"
+                for ordi in l.computers:
+                    id = os.popen("sshpass -p " + os.getenv('password')+ " ssh -o StrictHostKeyChecking=no " + os.getenv('user') + "@" + os.getenv('ESXi') + " " + "vim-cmd vmsvc/getallvms | grep \"" + ordi.name + "/" + ordi.name + ".vmx\" | cut -c1-4 | awk '{$1=$1};1'").read().replace("\n", "")
+                    if ordi.name in listNewComp :
+                        IP = os.popen("sshpass -p " + os.getenv('password')+ " ssh -o StrictHostKeyChecking=no " + os.getenv('user') + "@" + os.getenv('ESXi') + " " + "vim-cmd vmsvc/get.guest "+id+" | grep -m 1 '192.168.1.' | sed 's/[^0-9+.]*//g'").read().replace("\n", "")
+                    else :
+                        IP = os.popen("sshpass -p " + os.getenv('password')+ " ssh -o StrictHostKeyChecking=no " + os.getenv('user') + "@" + os.getenv('ESXi') + " " + "vim-cmd vmsvc/get.guest "+id+" | grep -m 1 '192.168.' | sed 's/[^0-9+.]*//g'").read().replace("\n", "")
+                    ordi.ESXiID = id
+                    ordi.dhcpIP = IP 
+
+                # on réunit les ordinateurs par type, car il existe un fichier group_vars par type
+                for type in TYPES:
+                    ordis = l.getOrdiWithType(type)
+                    hosts= ""
+                    for ordi in ordis:
+                        hosts += "    "+ordi.dhcpIP+":\n"
+                    fichier.write(type + ":\n  hosts:\n" + hosts + '\n')
+                fichier.close()
+
+                # On crée ex nihilo le fichier detectionlab.yml
+                os.system("rm ansible/detectionlab.yml")
+                fichier = open("ansible/detectionlab.yml", 'a')
+                fichier.write("---\n")
+                
+                for ordi in l.computers:
+                    if ordi.name == guacaComp:
+                        fichier.write("- hosts: " + ordi.dhcpIP)
+                        fichier.write("\n  roles:\n")
+                        ordi.buildAnsibleTasks(l.getDNSIP()) # dans cette fonction sont crée les roles à partir des samples
+                        fichier.write("    - "+ "guacamoleActualise" + "\n")
+                        fichier.write("  tags: " + ordi.name + "\n\n")
+                    elif ordi.name in listNewComp :
+                        fichier.write("- hosts: " + ordi.dhcpIP)
+                        fichier.write("\n  roles:\n")
+                        ordi.buildAnsibleTasks(l.getDNSIP()) # dans cette fonction sont crée les roles à partir des samples
+                        for role in ordi.ansibleRoles:
+                            fichier.write("    - "+ role + "\n")
+                        fichier.write("  tags: " + ordi.name + "\n\n")
+                fichier.close()
+                print("Running ansible...")
+                # Lance les scripts ansible créés ordinateur par ordinateur
+                for ordi in l.computers:
+                    os.chdir("ansible")
+                    os.system("ansible-playbook detectionlab.yml --tags \""+ordi.name+"\" --timeout 180")
+                    os.chdir("..")
+                time.sleep(5)
+                print("Done ! Cleaning...")
+                l.cleanAnsibleFiles()
+                print("Disconnecting management network...")
+                l.disconnectVMFromManagementNetwork()
+                print("Taking snapshots...")
+                l.takeSnapshot()
+                print("Saving lab...")
+                l.save()
+                print(l)  
+                shutil.rmtree("Labs/" + l.name + '_add/') 
+                ###################################################################################
+                ###################################################################################
+                ###################################################################################
+                ###################################################################################
+                ###################################################################################
+            elif c == "addrole":
+                notexist = True
+                chaine = ""
+                chaine += "Lab name: "+ l.name + "\n"
+                chaine += "\n   Name"
+                for ordi in l.computers:
+                    chaine += "\n - " + ordi.name 
+                print(chaine)
+                li =os.listdir("Labs/" + l.name+"/")
+                ca=[x.split('.')[0] for x in li]
+                while notexist :
+                    c = input("VM >> ")
+                    for d in ca:
+                        if c == d:    
+                            notexist = False
+                    if c =="" :
+                        print("Aborting...")
+                        shutil.rmtree("Labs/" + l.name +"_add")
+                        return None
+                    elif notexist:
+                        print("VM doesn't exist")
+                rolenotexit = True
+                while rolenotexit :
+                    c2 = input("Roles >> ")
+                    ca2 = c2.split(" ")
+                    for d in ca2:
+                        if not d in ROLES:
+                            print("Role "+d+" does not exist")
+                            break
+                    else:
+                        rolenotexit = False
+                l.cleanAnsibleFiles()
+
+                os.system("rm ansible/inventory.yml")
+                fichier = open("ansible/inventory.yml", 'a')
 
                 for ordi in l.computers:
                     id = os.popen("sshpass -p " + os.getenv('password')+ " ssh -o StrictHostKeyChecking=no " + os.getenv('user') + "@" + os.getenv('ESXi') + " " + "vim-cmd vmsvc/getallvms | grep \"" + ordi.name + "/" + ordi.name + ".vmx\" | cut -c1-4 | awk '{$1=$1};1'").read().replace("\n", "")
@@ -664,23 +764,15 @@ def main():
                 os.system("rm ansible/detectionlab.yml")
                 fichier = open("ansible/detectionlab.yml", 'a')
                 fichier.write("---\n")
-                guacaComp=l.name+"ubuntu0"
                 for ordi in l.computers:
-                    if ordi.name == guacaComp:
+                    if c in ordi.name:
                         fichier.write("- hosts: " + ordi.dhcpIP)
                         fichier.write("\n  roles:\n")
                         ordi.buildAnsibleTasks(l.getDNSIP()) # dans cette fonction sont crée les roles à partir des samples
-                        fichier.write("    - "+ "guacamoleActualise" + "\n")
-                        fichier.write("  tags: " + ordi.name + "\n\n")
-                    elif ordi.name in listNewComp :
-                        fichier.write("- hosts: " + ordi.dhcpIP)
-                        fichier.write("\n  roles:\n")
-                        ordi.buildAnsibleTasks(l.getDNSIP()) # dans cette fonction sont crée les roles à partir des samples
-                        for role in ordi.ansibleRoles:
-                            fichier.write("    - "+ role + "\n")
+                        for d in ca2:
+                            fichier.write("    - "+ d + "\n")
                         fichier.write("  tags: " + ordi.name + "\n\n")
                 fichier.close()
-                input("reegarder fichier detectionlab.yml et inventory.yml")
                 print("Running ansible...")
                 # Lance les scripts ansible créés ordinateur par ordinateur
                 for ordi in l.computers:
@@ -688,17 +780,17 @@ def main():
                     os.system("ansible-playbook detectionlab.yml --tags \""+ordi.name+"\" --timeout 180")
                     os.chdir("..")
                 time.sleep(5)
-                print("Done ! Cleaning...")
+                
                 l.cleanAnsibleFiles()
-                print("Disconnecting management network...")
-                l.disconnectVMFromManagementNetwork()
-                print("Taking snapshots...")
+                print("Done ! Cleaning...")
                 l.takeSnapshot()
                 print("Saving lab...")
                 l.save()
-                print(l)  
-                shutil.rmtree("Labs/" + l.name + '_add/') 
-
+                ###################################################################################
+                ###################################################################################
+                ###################################################################################
+                ###################################################################################
+                ###################################################################################
             else:
                 print("Command not found !")
 

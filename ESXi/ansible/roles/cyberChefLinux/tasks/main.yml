@@ -1,0 +1,12 @@
+- name : Download CyberChef  from master
+  copy : 
+    src: ~/Tools/CyberChef/CyberChef_v9.55.0/
+    dest: CyberChef/
+
+- name: shortcut cyberChef agent on ubuntu
+  become: yes
+  shell: |
+    ln -s  CyberChef/CyberChef_v9.55.0.html  Bureau
+
+- debug: msg="{{ output.stdout }}"
+- debug: msg="{{ output.stderr }}"

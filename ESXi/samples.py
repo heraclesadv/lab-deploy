@@ -40,5 +40,7 @@ ROLES = {# chaque role correspond à une fonctionnalité
     "sentinelOneUbuntu": [""],
     "harfangUbuntu": [""],
     "guacamoleActualise": [""],
-    "vs2019Win": [""]
+    "vs2019Win": [""],
+    "cyberChefWin": [""],
+    "cyberChefLinux": [""]
 }

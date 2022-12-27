@@ -1,10 +1,15 @@
+- name : copy SentinelOne
+  become : true
+  copy : 
+    src: ~/Tools/SentinelOne/SentinelOneUbuntu.deb
+    dest: /etc/SentinelOneUbuntu.deb
+
 - name: Install SentinelOne agent on ubuntu
   args: 
     executable: /bin/bash
   become: yes
   shell: |
-    wget "http://192.168.1.52/SentinelOneUbuntu.deb"
-    dpkg -i SentinelOneUbuntu.deb
+    dpkg -i /etc/SentinelOneUbuntu.deb
     /opt/sentinelone/bin/sentinelctl management token set {{ ansible_token_S1 }}
     /opt/sentinelone/bin/sentinelctl control start
   register: sone
