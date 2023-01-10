@@ -1,0 +1,14 @@
+  #Note++
+
+- name: Create directory npp
+  ansible.windows.win_file:
+    path: C:\Install_npp
+    state: directory
+
+- name : Download npp from master
+  win_copy : 
+    src: ~/Tools/Install_npp/npp.8.4.6.Installer.x64.exe
+    dest: C:\Install_npp/npp.8.4.6.Installer.x64.exe 
+
+- name: Install npp
+  win_command: C:\Install_npp/npp.8.4.6.Installer.x64.exe /S

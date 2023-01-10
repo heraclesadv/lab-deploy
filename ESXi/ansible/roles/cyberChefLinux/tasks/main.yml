@@ -8,5 +8,3 @@
   shell: |
     ln -s  CyberChef/CyberChef_v9.55.0.html  Bureau
 
-- debug: msg="{{ output.stdout }}"
-- debug: msg="{{ output.stderr }}"

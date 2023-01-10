@@ -42,5 +42,9 @@ ROLES = {# chaque role correspond à une fonctionnalité
     "guacamoleActualise": [""],
     "vs2019Win": [""],
     "cyberChefWin": [""],
-    "cyberChefLinux": [""]
+    "cyberChefLinux": [""],
+    "vsCodeLinux": [""],
+    "vsCodeWin": [""],
+    "notepadWin": [""],
+    "processExpWin": [""]
 }

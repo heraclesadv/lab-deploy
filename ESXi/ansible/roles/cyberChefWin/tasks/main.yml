@@ -10,5 +10,3 @@
     dest: C:\Users\vagrant\Desktop\CyberChef.lnk
     icon: C:\CyberChef_v9.55.0\CyberChef_v9.55.0.html,0
 
-- debug: msg="{{ output.stdout }}"
-- debug: msg="{{ output.stderr }}"

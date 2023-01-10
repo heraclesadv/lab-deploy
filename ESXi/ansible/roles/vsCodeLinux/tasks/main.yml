@@ -1,0 +1,16 @@
+- name : Download vscode installer from master
+  become : true
+  copy : 
+    src: ~/Tools/VScode/code.deb
+    dest: /etc/vscode.deb
+
+- name: Install vscode agent on ubuntu
+  args: 
+    executable: /bin/bash
+  become: yes
+  shell: |
+    sudo apt install /etc/vscode.deb
+  register: cbrs
+
+- debug: msg="{{ output.stdout }}"
+- debug: msg="{{ output.stderr }}"

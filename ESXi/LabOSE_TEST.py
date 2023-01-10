@@ -360,7 +360,6 @@ class ordinateur:
                     "DCIP": dnsIP
                 })
                 self.ansibleRoles.append(nom)
-
 class network:
     # Est lié à un lab, permet de gérer tous les aspects liés au réseau
     def __init__(self,labname:str):
@@ -741,7 +740,6 @@ def main():
                     else:
                         rolenotexit = False
                 l.cleanAnsibleFiles()
-
                 os.system("rm ansible/inventory.yml")
                 fichier = open("ansible/inventory.yml", 'a')
 
@@ -750,7 +748,6 @@ def main():
                     IP = os.popen("sshpass -p " + os.getenv('password')+ " ssh -o StrictHostKeyChecking=no " + os.getenv('user') + "@" + os.getenv('ESXi') + " " + "vim-cmd vmsvc/get.guest "+id+" | grep -m 1 '192.168.' | sed 's/[^0-9+.]*//g'").read().replace("\n", "")
                     ordi.ESXiID = id
                     ordi.dhcpIP = IP 
-
                 # on réunit les ordinateurs par type, car il existe un fichier group_vars par type
                 for type in TYPES:
                     ordis = l.getOrdiWithType(type)
@@ -765,11 +762,27 @@ def main():
                 fichier = open("ansible/detectionlab.yml", 'a')
                 fichier.write("---\n")
                 for ordi in l.computers:
-                    if c in ordi.name:
+                    if c in ordi.name :
+                        ordi.ansibleRoles = []
                         fichier.write("- hosts: " + ordi.dhcpIP)
                         fichier.write("\n  roles:\n")
-                        ordi.buildAnsibleTasks(l.getDNSIP()) # dans cette fonction sont crée les roles à partir des samples
-                        for d in ca2:
+                        for role in ca2:
+                            if ROLES[role][0] == "":
+                                ordi.ansibleRoles.append(role)
+                            else:
+                                nom = ordi.name + role
+                                os.system("mkdir ansible/roles/" + nom)
+                                os.system("mkdir ansible/roles/"+nom+"/tasks")
+                                importConfigFile("ansible/roles/samples/"+ROLES[role][0], "ansible/roles/"+nom+"/tasks/main.yml", {
+                                    "name":ordi.name,
+                                    "HostOnlyIP": ordi.IP,
+                                    "DNSServer": l.getDNSIP(),
+                                    "MACAdressHostOnly": ordi.macAddressHostOnly.replace(":", "-"),
+                                    "gateway":ordi.lab.network.IPmask+"1",
+                                    "DCIP": l.getDNSIP()
+                                })
+                                ordi.ansibleRoles.append(nom)
+                        for d in ordi.ansibleRoles:
                             fichier.write("    - "+ d + "\n")
                         fichier.write("  tags: " + ordi.name + "\n\n")
                 fichier.close()
@@ -779,10 +792,13 @@ def main():
                     os.chdir("ansible")
                     os.system("ansible-playbook detectionlab.yml --tags \""+ordi.name+"\" --timeout 180")
                     os.chdir("..")
+                    ordi.getType()
                 time.sleep(5)
                 
                 l.cleanAnsibleFiles()
                 print("Done ! Cleaning...")
+                print("Disconnecting management network...")
+                l.disconnectVMFromManagementNetwork()
                 l.takeSnapshot()
                 print("Saving lab...")
                 l.save()

@@ -1,0 +1,9 @@
+- name : Download vscode installer from master
+  win_copy: 
+    src: ~/Tools/VScode/VSCodeSetup-x64-1.74.2.exe
+    dest: C:\vscode.exe
+
+- name: Install vscode agent on win
+  win_shell: "C:\\vscode.exe /VERYSILENT /NORESTART /MERGETASKS=!runcode"
+
+

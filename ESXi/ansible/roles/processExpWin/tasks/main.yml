@@ -1,0 +1,22 @@
+#Process Explorer
+
+- name: Create directory Process Explorer
+  ansible.windows.win_file:
+    path: C:\ProcessExplorer
+    state: directory
+
+- name : Download Process64 from master
+  win_copy : 
+    src: ~/Tools/ProcessExplorer/procexp64.exe
+    dest: C:\ProcessExplorer\procexp64.exe
+
+- name : Download Process from master
+  win_copy : 
+    src: ~/Tools/ProcessExplorer/procexp.exe
+    dest: C:\ProcessExplorer\procexp.exe
+
+- name: Create Shortcut Process on the desk
+  win_shortcut:
+    src: C:\ProcessExplorer\
+    dest: C:\Users\vagrant\Desktop\ProcessExp.lnk
+    icon: C:\ProcessExplorer\procexp.exe,0
