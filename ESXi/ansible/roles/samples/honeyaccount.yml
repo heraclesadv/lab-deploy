@@ -1,0 +1,20 @@
+- name: creating honey user in AD
+  win_shell: "New-ADUser -name "Honey Token" -GivenName "Honey" -Surname "Token" -SamAccountName "Honey.Token" -UserPrincipalName "Honey.Token@WINDOMAIN.local" -AccountPassword (ConvertTo-SecureString "@zerty75" -AsPlainText -Force) -Description "Code Temp @zerty75" -Enabled $true"
+
+- name: info dump
+  win_shell: "Les Honey Tokens sont des Honey Pots spécifique à Active Directory et ces alternatives" | Out-File -FilePath C:\Users\administrator\Desktop\"Honey Token.txt"
+    "Il existe de nombreux types d'honey tokens" | Out-File -FilePath C:\Users\administrator\Desktop\"Honey Token.txt" -Append
+    "Tous consiste à créer et surveiller des datas inutiles / fictives dans AD" | Out-File -FilePath C:\Users\administrator\Desktop\"Honey Token.txt" -Append
+    "Ils sont une couche de défense interne permettant d'identifier des comptes AD compromis qui cherche à augmenter leur privilège ou des comptes qui leaks des données confidentielles" | Out-File -FilePath C:\Users\administrator\Desktop\"Honey Token.txt" -Append
+    "Dans notre cas, un compte, Honey.Token a été généré dans notre domaine WINDOMAIN.local" | Out-File -FilePath C:\Users\administrator\Desktop\"Honey Token.txt" -Append
+    "Le code d'accès au compte est dans la description du compte AD" | Out-File -FilePath C:\Users\administrator\Desktop\"Honey Token.txt" -Append
+    "Afin de surveiller notre honey token les events de sécurité de Windows à monitorés sont" | Out-File -FilePath C:\Users\administrator\Desktop\"Honey Token.txt" -Append
+    "L'event 4662(Directory service access), 4688 (Process creation), 4624 (Logon), 4634 (Logoff), 4768 (Kerberos Authentication Service) et 4769 (Kerberos Service Ticket Operations)" | Out-File -FilePath C:\Users\administrator\Desktop\"Honey Token.txt" -Append
+    "Directory Service Access, Process creation et les logs Kerberos sont à comparé avec les logons/off sur l'honey account afin de déterminer le ou les compte(s) compromi(s) ainsi que leur(s) ip(s)" | Out-File -FilePath C:\Users\administrator\Desktop\"Honey Token.txt" -Append
+    " " | Out-File -FilePath C:\Users\administrator\Desktop\"Honey Token.txt" -Append
+    "Pour des informations plus poussées:" | Out-File -FilePath C:\Users\administrator\Desktop\"Honey Token.txt" -Append
+    "https://apt29a.blogspot.com/2019/11/deploying-honeytokens-in-active.html" | Out-File -FilePath C:\Users\administrator\Desktop\"Honey Token.txt" -Append
+
+
+
+      
