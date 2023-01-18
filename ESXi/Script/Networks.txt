@@ -1,0 +1,4 @@
+HostOnly1 used 192.168.56.
+HostOnly2 used 192.168.2.
+HostOnly3 used 192.168.3.
+HostOnly4 unused 192.168.4.
