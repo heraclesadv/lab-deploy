@@ -30,6 +30,7 @@ ROLES = {# chaque role correspond à une fonctionnalité
     "joinDomain": ["joinDomainSample.yml"],
     "joinADUbuntu": ["joinADUbuntu.yml"],
     "createDomain": ["createDomainSample.yml"],
+    "honeyaccount": [""],
 
     # Fonctionnalités
     "guacamole": [""],
