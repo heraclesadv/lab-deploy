@@ -1,0 +1,9 @@
+- name : Download Badblood from master
+  win_copy : 
+    src: ~/Tools/BadBlood/
+    dest: C:\Users\administrator\Desktop
+
+- name: Executing Badblood
+  win_shell: cd C:\Users\administrator\Desktop\BadBlood
+    .\Invoke-BadBlood.ps1
+    
