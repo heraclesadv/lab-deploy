@@ -31,6 +31,7 @@ ROLES = {# chaque role correspond à une fonctionnalité
     "joinADUbuntu": ["joinADUbuntu.yml"],
     "createDomain": ["createDomainSample.yml"],
     "honeyaccount": [""],
+    "badblood": [""],
 
     # Fonctionnalités
     "guacamole": [""],

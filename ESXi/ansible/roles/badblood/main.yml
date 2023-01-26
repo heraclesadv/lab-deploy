@@ -4,6 +4,7 @@
     dest: C:\Users\administrator\Desktop
 
 - name: Executing Badblood
-  win_shell: cd C:\Users\administrator\Desktop\BadBlood
-    .\Invoke-BadBlood.ps1
+  win_shell: .\\Invoke-BadBlood.ps1
+  args:
+    chdir: 'C:\Users\administrator\Desktop\BadBlood'
     
