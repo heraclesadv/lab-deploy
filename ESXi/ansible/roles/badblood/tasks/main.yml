@@ -1,0 +1,12 @@
+- name: Creating directory
+  win_shell: mkdir C:\Users\administrator\Desktop\BadBlood
+
+- name : Download badblood from master
+  win_copy : 
+    src: ~/Tools/BadBlood/
+    dest: C:\Users\administrator\Desktop\BadBlood
+
+- name: Executing badblood
+  win_shell: .\\Invoke-BadBlood.ps1
+  args:
+    chdir: 'C:\Users\administrator\Desktop\BadBlood'
