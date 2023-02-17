@@ -1,0 +1,25 @@
+- name: Creating directory
+  win_shell: mkdir C:\Sharphound
+  become: yes
+
+- name: Deactivating Windows Defender
+  win_shell: Set-MpPreference -DisableRealtimeMonitoring $true
+  become: yes 
+
+- name: Creating Windows Defender exclution path
+  win_shell: Add-MpPreference -ExclusionPath “C:\Users\Public\Sharphound”
+  become: yes
+
+- name : Download Sharphound from master
+  win_copy :
+   src: ~/Tools/Sharphound/SharpHound.exe
+   dest: C:\Users\Public\Sharphound
+  become: yes
+
+- name: Executing SharpHound
+  win_shell: .\\SharpHound.exe
+  become: yes
+
+- name: Reactivating Windows Defender
+  win_shell: Set-MpPreference -DisableRealtimeMonitoring $false
+  become: yes
