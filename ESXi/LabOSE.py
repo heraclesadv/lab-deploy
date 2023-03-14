@@ -1,9 +1,8 @@
 # Gestionnaire de Labs - AP
 
 # KNOWN ISSUES:
-# On ne peut pas se log sur win7 avec guacamole -> passer par la console ESXi
-# on ne peut pas ajouter un supprimer un pc d'un lab
-# Il faudrait ajouter la possibilité de manager un autre pc ajouté à la main
+
+# on ne peut pas supprimer un pc d'un lab
 # Parfois, certain win10 ne parviennent pas à rejoindre le domaine, il suffit de rebuild le lab.
 # --> erreur difficilement reproductible
 

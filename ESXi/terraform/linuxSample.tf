@@ -9,7 +9,7 @@ resource "esxi_guest" "<name>" {
   numvcpus           = "4"
   resource_pool_name = "/"
   power              = "on"
-  clone_from_vm = "Ubuntu2004"
+  clone_from_vm = "UbuntuServ2004"
 
     provisioner "remote-exec" {
     inline = [

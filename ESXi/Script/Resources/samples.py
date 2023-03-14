@@ -47,5 +47,6 @@ ROLES = {# chaque role correspond à une fonctionnalité
     "vsCodeLinux": [""],
     "vsCodeWin": [""],
     "notepadWin": [""],
-    "processExpWin": [""]
+    "processExpWin": [""],
+    "CAinit": [""]
 }

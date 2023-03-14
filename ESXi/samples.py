@@ -32,6 +32,7 @@ ROLES = {# chaque role correspond à une fonctionnalité
     "createDomain": ["createDomainSample.yml"],
     "honeyaccount": [""],
     "badblood": [""],
+    "sharphound": [""],
 
     # Fonctionnalités
     "guacamole": [""],

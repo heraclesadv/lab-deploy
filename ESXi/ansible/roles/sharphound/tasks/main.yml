@@ -1,25 +1,28 @@
 - name: Creating directory
   win_shell: mkdir C:\Sharphound
-  become: yes
-
-- name: Deactivating Windows Defender
-  win_shell: Set-MpPreference -DisableRealtimeMonitoring $true
-  become: yes 
-
-- name: Creating Windows Defender exclution path
-  win_shell: Add-MpPreference -ExclusionPath “C:\Users\Public\Sharphound”
-  become: yes
+  vars:
+    ansible_become: yes
+    ansible_become_method: runas
+    ansible_become_user: WINDOMAIN\vagrantAdmin
+    ansible_become_password: vagrant
 
 - name : Download Sharphound from master
   win_copy :
    src: ~/Tools/Sharphound/SharpHound.exe
-   dest: C:\Users\Public\Sharphound
-  become: yes
+   dest: C:\Sharphound
+  vars:
+    ansible_become: yes
+    ansible_become_method: runas
+    ansible_become_user: WINDOMAIN\vagrantAdmin
+    ansible_become_password: vagrant
 
 - name: Executing SharpHound
   win_shell: .\\SharpHound.exe
-  become: yes
+  args:
+    chdir: 'C:\Sharphound'
+  vars:
+    ansible_become: yes
+    ansible_become_method: runas
+    ansible_become_user: WINDOMAIN\vagrantAdmin
+    ansible_become_password: vagrant
 
-- name: Reactivating Windows Defender
-  win_shell: Set-MpPreference -DisableRealtimeMonitoring $false
-  become: yes
