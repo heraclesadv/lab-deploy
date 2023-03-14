@@ -1,0 +1,17 @@
+ResetPwd.py - General help
+
+Description : Allows you to reset a user's password
+
+Usage : You can run the script with or without arguments 
+
+With :
+    Example : python3 ResetPwd Lab1 
+                                1  
+- arg 1 = input the Name of the LAB 
+
+Without :
+    Example of sequence of command to add roles :
+     Please enter the name of the lab >> Lab1
+     Please enter the user's ID : me@user.com
+
+

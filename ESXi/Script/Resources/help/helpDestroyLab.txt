@@ -1,0 +1,22 @@
+DestroyLab.py - General help
+
+Description : Allows you to add roles on one of the VMs
+
+Usage : You can run the script with or without arguments 
+
+With :
+
+    Example : python3 AddRole Lab1 Lab1win101 vs2019Win sentinelOneWin
+                                1       2         3            4  
+ - arg 1 = input the Name of the LAB 
+ - agr 2 = input the Name of the VM 
+ - arg 3 to infinite =  List the roles 
+
+Without :
+
+    Example of sequence of command to destroy lab :
+     Please enter the name of the lab >> Lab1
+
+
+NB: roles are listed in the sample.py file. Only one type should be given, the script doesn't check user's input.
+Also createDomain should be placed before any joinDomain.

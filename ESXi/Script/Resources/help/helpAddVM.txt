@@ -1,0 +1,21 @@
+AddVm.py - General help
+
+Description : Allows you to add VMs to a LAB
+
+Usage : You can run the script with or without arguments 
+
+With :
+    Example : python3 AddVM Lab1 
+                             1    
+ - arg 1 = input the Name of the LAB 
+
+Without :
+    Example of sequence of command to add Vms :
+     Please enter the name of the lab >> Lab1
+     add >> win10 cybereasonWin
+     add >> ubuntuDsk vs2019Win
+     add >> 
+         >> y
+
+NB: roles are listed in the sample.py file. Only one type should be given, the script doesn't check user's input.
+Also createDomain should be placed before any joinDomain.
