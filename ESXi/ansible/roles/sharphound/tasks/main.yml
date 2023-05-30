@@ -1,0 +1,28 @@
+- name: Creating directory
+  win_shell: mkdir C:\Sharphound
+  vars:
+    ansible_become: yes
+    ansible_become_method: runas
+    ansible_become_user: WINDOMAIN\vagrantAdmin
+    ansible_become_password: vagrant
+
+- name : Download Sharphound from master
+  win_copy :
+   src: ~/Tools/Sharphound/SharpHound.exe
+   dest: C:\Sharphound
+  vars:
+    ansible_become: yes
+    ansible_become_method: runas
+    ansible_become_user: WINDOMAIN\vagrantAdmin
+    ansible_become_password: vagrant
+
+- name: Executing SharpHound
+  win_shell: .\\SharpHound.exe
+  args:
+    chdir: 'C:\Sharphound'
+  vars:
+    ansible_become: yes
+    ansible_become_method: runas
+    ansible_become_user: WINDOMAIN\vagrantAdmin
+    ansible_become_password: vagrant
+

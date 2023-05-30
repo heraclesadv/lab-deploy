@@ -19,7 +19,8 @@
   win_shell: "If (-not(get-netipaddress | where {$_.IPAddress -eq '<HostOnlyIP>'})) {$adapter = (get-netadapter | where {$_.MacAddress -eq '<MACAdressHostOnly>'}).Name; New-NetIPAddress –InterfaceAlias $adapter –AddressFamily IPv4 -IPAddress <HostOnlyIP> –PrefixLength 24 -DefaultGateway <gateway> } Else { Write-Host 'IP Address Already Created.' }"
 
 - name: Set DNS Address
-  win_shell: "$adapter = (get-netadapter | where {$_.MacAddress -eq '<MACAdressHostOnly>'}).Name; Set-DnsClientServerAddress -InterfaceAlias $adapter -ServerAddresses <gateway>,8.8.8.8"
+  win_shell: "$adapter = (get-netadapter | where {$_.MacAddress -eq '<MACAdressHostOnly>'}).Name; Set-DnsClientServerAddress -InterfaceAlias $adapter -ServerAddresses <gateway>,<gateway>"
+
 
 - name: Download git installer from master
   win_get_url:
