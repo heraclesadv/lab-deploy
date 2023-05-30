@@ -8,15 +8,12 @@ resource "esxi_guest" "<name>" {
   numvcpus           = "2"
   resource_pool_name = "/"
   power              = "on"
-  clone_from_vm = "Kali20223"
-
+  clone_from_vm = "Cali"
 
     provisioner "remote-exec" {
     inline = [
-      "sudo dhclient eth0 && echo 'restart dhclient on eth0' || echo 'unable to bring eth0 dhclient'",
-      "sudo ifconfig eth0 down && echo 'eth0 down' || echo 'unable to bring eth0 interface down'",
-      "sudo ifconfig eth0 up && echo 'eth0 up' || echo 'unable to bring eth0 interface up'",
-      "sudo ifconfig eth1 down && echo 'eth1 down' || echo 'unable to bring eth1 interface down'"
+      "sudo ifup eth0 && echo 'eth0 up' || echo 'unable to bring eth0 interface up'",      
+      "sudo ifup eth1 && echo 'eth1 up' || echo 'unable to bring eth1 interface up'"
     ]
 
     connection {

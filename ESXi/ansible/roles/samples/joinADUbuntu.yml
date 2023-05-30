@@ -5,6 +5,7 @@
   shell: |
       apt update
       apt -y install realmd libnss-sss libpam-sss sssd sssd-tools adcli samba-common-bin oddjob oddjob-mkhomedir packagekit
+  ignore_errors: true
 
 - name: Set hostname to <name>.windomain.local
   args: 

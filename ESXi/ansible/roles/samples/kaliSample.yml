@@ -18,18 +18,20 @@
     dest: /vagrant/
   become: yes
 
-
-- name: Make eth1 satic
-  shell: "printf 'allow-hotplug eth1\niface eth1 inet static\naddress <HostOnlyIP>\nnetmask 255.255.255.0\ngateway <gateway>\n' | sudo tee -a /etc/network/interfaces"
+- name: changing network config
+  shell: mv /etc/network/temporary /etc/network/interfaces
   become: yes
 
-- name: switch on eth1
-  shell: "sudo ifconfig eth1 up"
+- name: set new ip
+  shell: sudo sed -i -e 's/address/address <HostOnlyIP>/' /etc/network/interfaces
   become: yes
 
+- name: set new gateway
+  shell: sudo sed -i -e 's/gateway/gateway <gateway>/' /etc/network/interfaces
+  become: yes
 
-- name: Make eth0 static
-  shell: "printf 'auto eth0\nallow-hotplug eth0\niface eth0 inet static\naddress <HostOnlyIP>\nnetmask 255.255.255.0\ngateway <gateway>\n' | sudo tee -a /etc/network/interfaces"
+- name: switch on eth0
+  shell: "sudo ifup eth0"
   become: yes
 
 - name: updater etc hosts
@@ -40,6 +42,13 @@
   shell: "printf 'nameserver <gateway>\n' | sudo tee /etc/resolv.conf"
   become: yes
 
-- name: change hostname for the pid file of tightVNC
+- name: rename tightVNC file according to new hostname
+  shell: mv /home/vagrant/.vnc/kali:1.log /home/vagrant/.vnc/<name>:1.log && mv /home/vagrant/.vnc/kali:1.pid /home/vagrant/.vnc/<name>:1.pid
+  become: yes
+
+- name: update tightVNC file timestamp 
   shell: "printf '#!/bin/bash\ntouch /home/vagrant/.vnc/<name>:1.pid\n' | sudo tee /usr/bin/vnc_script"
   become: yes
+
+- name: start tightVNC
+  shell: tightvncserver

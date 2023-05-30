@@ -1,0 +1,30 @@
+- name: Set hostname to <name>
+  hostname:
+    name: <name>
+  become: yes
+
+- name: Create a directory if it does not exist
+  file:
+    path: /vagrant
+    state: directory
+    mode: '0755'
+  become: yes
+
+- name: Copy vagrant resources
+  synchronize:
+    src: ../../Vagrant/resources
+    dest: /vagrant/
+  become: yes
+
+- name: changing network config
+  shell: mv /etc/network/temporary /etc/network/interfaces
+  become: yes
+
+- name: set new ip
+  shell: sudo sed -i -e 's/address/address <HostOnlyIP>/' /etc/network/interfaces
+  become: yes
+
+- name: set new gateway
+  shell: sudo sed -i -e 's/gateway/gateway <gateway>/' /etc/network/interfaces
+  become: yes
+

@@ -5,8 +5,8 @@ resource "esxi_guest" "<name>" {
 
   boot_disk_type = "thin"
 
-  memsize            = "2048"
-  numvcpus           = "2"
+  memsize            = "4096"
+  numvcpus           = "3"
   resource_pool_name = "/"
   power              = "on"
   clone_from_vm = "WindowsServer2016"

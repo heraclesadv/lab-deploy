@@ -13,3 +13,15 @@
             <param name="ignore-cert">true</param>
             <param name="server-layout">fr-fr-azerty</param>
         </connection>
+        <connection name="<computerName>_LoginScreen">
+            <protocol>rdp</protocol>
+            <param name="hostname"><HostOnlyIP></param>
+            <param name="port">3389</param>
+            <param name="create-drive-path">true</param>
+            <param name="enable-drive">true</param>
+            <param name="drive-path">/etc/guacamole/shares/<computerName>_LoginScreen</param>
+            <param name="disable-download">true</param>
+            <param name="security">nla</param>
+            <param name="ignore-cert">true</param>
+            <param name="server-layout">fr-fr-azerty</param>
+        </connection>

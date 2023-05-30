@@ -5,7 +5,7 @@
   register: dir
 
 - name: Git clone repo
-  win_shell: git clone https://github.com/js-advens/lab-deploy.git
+  win_shell: git clone https://github.com/anthoback/lab-deploy.git
   args:
     chdir: 'c:\'
   register: cloning

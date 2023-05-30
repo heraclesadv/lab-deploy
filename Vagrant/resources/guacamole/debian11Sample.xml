@@ -1,0 +1,23 @@
+        <connection name="<computerName> - SSH">
+            <protocol>ssh</protocol>
+            <param name="hostname"><HostOnlyIP></param>
+            <param name="port">22</param>
+            <param name="username">vagrant</param>
+            <param name="password">vagrant</param>
+            <param name="enable-sftp">true</param>
+            <param name="sftp-disable-download">true</param>
+        </connection>
+        <connection name="<computerName> - RDP">
+            <protocol>rdp</protocol>
+            <param name="hostname"><HostOnlyIP></param>
+            <param name="port">3389</param>
+            <param name="username">vagrant</param>
+            <param name="password">vagrant</param>
+            <param name="create-drive-path">true</param>
+            <param name="enable-drive">true</param>
+            <param name="drive-path">/etc/guacamole/shares/<computerName></param>
+            <param name="disable-download">true</param>
+            <param name="security">tls</param>
+            <param name="ignore-cert">true</param>
+            <param name="server-layout">fr-fr-azerty</param>
+        </connection>

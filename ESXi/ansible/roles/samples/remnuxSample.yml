@@ -31,6 +31,8 @@
             dhcp4: false
             addresses: [<HostOnlyIP>/24]
             gateway4: <gateway>
+            nameservers:
+              addresses: [<gateway>, <gateway>]
 
 - name: Copy the netplan file over as root
   shell: "mv /tmp/01-netcfg.yaml /etc/netplan/01-netcfg.yaml"
@@ -54,6 +56,8 @@
             dhcp4: false
             addresses: [<HostOnlyIP>/24]
             gateway4: <gateway>
+            nameservers:
+              addresses: [<gateway>, <gateway>]
 
 - name: Copy the netplan file over as root
   shell: "mv /tmp/01-netcfg.yaml /etc/netplan/01-netcfg.yaml"

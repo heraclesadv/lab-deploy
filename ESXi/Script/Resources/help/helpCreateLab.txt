@@ -1,0 +1,27 @@
+CreateLab.py - General help
+
+Description : create a new lab, specs will be prompted to the user. Can be quite long
+
+Usage : You can run the script with or without arguments 
+
+With :
+    Example : python3 CreateLab.py Lab1 Template.xlsx
+                                    1         2
+ - arg 1 = input the Name of the LAB  
+ - arg 2 = input the Name of the File Template  
+
+Without :
+    Example of sequence of command :
+     Please enter the name of the lab >> Lab1
+     add >> win10 cybereasonWin
+     add >> ubuntuDsk vs2019Win
+     add >> 
+         >> y
+     Use the template for users :(y/N) >> no
+     add user >> lab 
+     pwd >> lab
+     add user >>
+
+
+NB: roles are listed in the sample.py file. Only one type should be given, the script doesn't check user's input.
+Also createDomain should be placed before any joinDomain.

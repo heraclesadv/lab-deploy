@@ -1,0 +1,7 @@
+{
+    "python.analysis.extraPaths": [
+        "./ESXi/Script/Resources",
+        "./ESXi/Script/Resources",
+        "./ESXi/Script/Resources"
+    ]
+}

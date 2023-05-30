@@ -9,12 +9,12 @@ resource "esxi_guest" "<name>" {
   numvcpus           = "4"
   resource_pool_name = "/"
   power              = "on"
-  clone_from_vm = "Ubuntu2004"
+  clone_from_vm = "UbuntuServ2004"
 
     provisioner "remote-exec" {
     inline = [
-      "sudo ifconfig eth0 up && echo 'eth0 up' || echo 'unable to bring eth0 interface up",
-      "sudo ifconfig eth1 up && echo 'eth1 up' || echo 'unable to bring eth1 interface up"
+      "sudo ip link set dev eth0 up",
+      "sudo ip link set dev eth1 up"
     ]
 
     connection {

@@ -1,0 +1,45 @@
+---
+
+- name: Set hostname to <name>
+  hostname:
+    name: <name>
+  become: yes
+
+- name: Create a directory if it does not exist
+  file:
+    path: /vagrant
+    state: directory
+    mode: '0755'
+  become: yes
+
+- name: Copy vagrant resources
+  synchronize:
+    src: ../../Vagrant/resources
+    dest: /vagrant/
+  become: yes
+
+
+- name: Make eth1 satic
+  shell: "printf 'allow-hotplug eth1\niface eth1 inet static\naddress <HostOnlyIP>\nnetmask 255.255.255.0\ngateway <gateway>\n' | sudo tee -a /etc/network/interfaces"
+  become: yes
+
+- name: switch on eth1
+  shell: "sudo ifconfig eth1 up"
+  become: yes
+
+
+- name: Make eth0 static
+  shell: "printf 'auto eth0\nallow-hotplug eth0\niface eth0 inet static\naddress <HostOnlyIP>\nnetmask 255.255.255.0\ngateway <gateway>\n' | sudo tee -a /etc/network/interfaces"
+  become: yes
+
+- name: updater etc hosts
+  shell: "printf '127.0.0.1        <name>' | sudo tee -a /etc/hosts"
+  become: yes
+
+- name: add DNS adress
+  shell: "printf 'nameserver <gateway>\n' | sudo tee /etc/resolv.conf"
+  become: yes
+
+- name: change hostname for the pid file of tightVNC
+  shell: "printf '#!/bin/bash\ntouch /home/vagrant/.vnc/<name>:1.pid\n' | sudo tee /usr/bin/vnc_script"
+  become: yes

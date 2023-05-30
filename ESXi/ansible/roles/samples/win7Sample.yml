@@ -19,7 +19,7 @@
   win_command: netsh int ip set address name="Connexion au réseau local 2" static <HostOnlyIP> 255.255.255.0 <gateway>
  
 - name: Set DNS
-  win_command: netsh interface ip set dns name="Connexion au réseau local 2" static <DNSServer> primary
+  win_command: netsh interface ip set dns name="Connexion au réseau local 2" static <gateway> primary
 
 - name : Download Installer from master
   win_copy : 

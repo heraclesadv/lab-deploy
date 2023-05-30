@@ -11,6 +11,8 @@ TYPES = {
     "kali": ["terraform/kaliSample.tf", "../Vagrant/resources/guacamole/kaliSample.xml"],
     "remnux": ["terraform/remnuxSample.tf", "../Vagrant/resources/guacamole/remnuxSample.xml"],
     "centos7": ["terraform/centos7.tf", "../Vagrant/resources/guacamole/centos7Sample.xml"],
+    "debian11": ["terraform/debian11.tf", "../Vagrant/resources/guacamole/debian11Sample.xml"],
+    "centos9": ["terraform/centos9.tf", "../Vagrant/resources/guacamole/centos9Sample.xml"],
 }
 
 ROLES = {# chaque role correspond à une fonctionnalité
@@ -25,12 +27,15 @@ ROLES = {# chaque role correspond à une fonctionnalité
     "kali": ["kaliSample.yml"],
     "remnux": ["remnuxSample.yml"],
     "centos7": ["centos7Sample.yml"],
+    "debian11": ["debian11Sample.yml"],
+    "centos9": ["centos9Sample.yml"],
 
     # Fonctionnalités liées à l'AD
     "joinDomain": ["joinDomainSample.yml"],
     "joinADUbuntu": ["joinADUbuntu.yml"],
     "createDomain": ["createDomainSample.yml"],
     "honeyaccount": [""],
+    "badblood": [""],
 
     # Fonctionnalités
     "guacamole": [""],
@@ -47,5 +52,6 @@ ROLES = {# chaque role correspond à une fonctionnalité
     "vsCodeLinux": [""],
     "vsCodeWin": [""],
     "notepadWin": [""],
-    "processExpWin": [""]
+    "processExpWin": [""],
+    "winlogbeat": [""]
 }

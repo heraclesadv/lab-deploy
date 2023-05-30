@@ -1,0 +1,27 @@
+- name: Set hostname to <name>
+  hostname:
+    name: <name>
+  become: yes
+
+- name: Create a directory if it does not exist
+  file:
+    path: /vagrant
+    state: directory
+    mode: '0755'
+  become: yes
+
+- name: Copy vagrant resources
+  synchronize:
+    src: ../../Vagrant/resources
+    dest: /vagrant/
+  become: yes
+
+
+- name: set new ip
+  shell: sudo ipv4.addresses <HostOnlyIP>/24
+  become: yes
+
+- name: set new gateway
+  shell: sudo nmcli connection modify ens35 ipv4.gateway <gateway>
+  become: yes
+

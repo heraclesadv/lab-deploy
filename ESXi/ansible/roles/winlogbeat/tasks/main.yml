@@ -1,0 +1,11 @@
+- name : Download winlogbeat config installer from master
+  win_copy : 
+    src: ~/Tools/winlogbeat/winlogbeat_withoutfilters.yml
+    dest: C:\Winlogbeat\winlogbeat.yml
+
+- name: Reboot
+  win_reboot:
+
+- name: restart winlogbeat
+  win_shell: "Start-Service winlogbeat"
+  ignore_errors: true

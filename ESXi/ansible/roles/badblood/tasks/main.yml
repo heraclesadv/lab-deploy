@@ -1,12 +1,7 @@
-- name: Creating directory
-  win_shell: mkdir C:\Users\administrator\Desktop\BadBlood
-
-- name : Download badblood from master
+- name : Download badblood
   win_copy : 
     src: ~/Tools/BadBlood/
-    dest: C:\Users\administrator\Desktop\BadBlood
+    dest: C:\ 
 
 - name: Executing badblood
-  win_shell: .\\Invoke-BadBlood.ps1
-  args:
-    chdir: 'C:\Users\administrator\Desktop\BadBlood'
+  win_shell: powershell.exe -executionpolicy bypass -noninteractive -File "C:\badblood\Invoke-BadBlood.ps1"

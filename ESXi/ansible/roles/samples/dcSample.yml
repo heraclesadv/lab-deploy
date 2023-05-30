@@ -23,7 +23,7 @@
 
 - name: Download git installer from master
   win_get_url:
-    url: http://192.168.1.52/gitWin64.exe
+    url: http://192.168.1.117/gitWin64.exe
     dest: 'C:\gitWin64.exe'
 
 - name: Install git

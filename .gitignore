@@ -20,3 +20,9 @@ lock
 lock_test
 utilisateurs
 .env
+ESXi/Script/Resources/Pwd/*
+ESXi/Script/Resources/__pycache__/*
+ESXi/Script/Resources/Networks.txt
+ESXi/Script/.env
+ESXi/Script/Resources/Template_Users.xlsx
+ESXi/Script/Resources/users.json

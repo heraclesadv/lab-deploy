@@ -5,7 +5,7 @@ resource "esxi_guest" "<name>" {
 
   boot_disk_type = "thin"
 
-  memsize            = "2048"
+  memsize            = "4096"
   numvcpus           = "2"
   resource_pool_name = "/"
   power              = "on"
@@ -20,7 +20,7 @@ resource "esxi_guest" "<name>" {
   # This is the network that bridges your host machine with the ESXi VM
   network_interfaces {
     virtual_network = var.vm_network
-    mac_address     = "<MACAddressLanPortGroup>"
+  #  mac_address     = "<MACAddressLanPortGroup>"
     nic_type        = "e1000"
   }
   # <balise>
